@@ -1,2 +1,4 @@
 rootProject.name = 'crevasse'
 
+include 'crevasse-plugin'
+

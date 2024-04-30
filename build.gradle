@@ -1,19 +1,133 @@
 plugins {
-    id 'java'
+    id 'groovy'
+    id 'idea'
+    id 'maven-publish'
+    id "com.github.davidmc24.gradle.plugin.avro" version "1.9.1"
+    id 'com.adarshr.test-logger' version '3.2.0'
+    id 'project-report'
+    id 'io.spring.dependency-management' version '1.0.10.RELEASE'
 }
 
-group = 'com.crevasse'
-version = '1.0-SNAPSHOT'
+allprojects {
+    idea {
+        module {
+            downloadJavadoc = true
+            downloadSources = true
+        }
+    }
 
-repositories {
-    mavenCentral()
+    group 'com.crevasse'
+    project.version = '1.0-SNAPSHOT'
 }
 
-dependencies {
-    testImplementation platform('org.junit:junit-bom:5.9.1')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
+def groovyVersion = "3.0.13"
+def icebergVersion = "1.5.1"
+def hadoopVersion = "3.2.0"
+def lombokVersion = '1.18.24'
+
+subprojects {
+
+    apply plugin: 'java'
+    apply plugin: 'groovy'
+    apply plugin: 'idea'
+    apply plugin: 'java-library'
+    apply plugin: 'project-report'
+    apply plugin: "com.adarshr.test-logger"
+    apply plugin: "io.spring.dependency-management"
+
+    repositories {
+        mavenCentral()
+    }
+
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
+
+    if (JavaVersion.current() == JavaVersion.VERSION_17) {
+        ext.jdkVersion = '17'
+        tasks.withType(Test).configureEach {
+            jvmArgs = jvmArgs + [
+                    "-XX:+IgnoreUnrecognizedVMOptions",
+                    "--add-opens", "java.base/java.io=ALL-UNNAMED",
+                    "--add-opens", "java.base/java.lang.invoke=ALL-UNNAMED",
+                    "--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED",
+                    "--add-opens", "java.base/java.lang=ALL-UNNAMED",
+                    "--add-opens", "java.base/java.math=ALL-UNNAMED",
+                    "--add-opens", "java.base/java.net=ALL-UNNAMED",
+                    "--add-opens", "java.base/java.nio=ALL-UNNAMED",
+                    "--add-opens", "java.base/java.text=ALL-UNNAMED",
+                    "--add-opens", "java.base/java.time=ALL-UNNAMED",
+                    "--add-opens", "java.base/java.util.concurrent.atomic=ALL-UNNAMED",
+                    "--add-opens", "java.base/java.util.concurrent=ALL-UNNAMED",
+                    "--add-opens", "java.base/java.util.regex=ALL-UNNAMED",
+                    "--add-opens", "java.base/java.util=ALL-UNNAMED",
+                    "--add-opens", "java.base/jdk.internal.ref=ALL-UNNAMED",
+                    "--add-opens", "java.base/jdk.internal.reflect=ALL-UNNAMED",
+                    "--add-opens", "java.sql/java.sql=ALL-UNNAMED",
+                    "--add-opens", "java.base/sun.util.calendar=ALL-UNNAMED",
+                    "--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED",
+                    "--add-opens", "java.base/sun.nio.cs=ALL-UNNAMED",
+                    "--add-opens", "java.base/sun.security.action=ALL-UNNAMED",
+                    "--add-opens", "java.base/sun.util.calendar=ALL-UNNAMED"
+            ]
+        }
+    }
+
+    dependencyManagement {
+        dependencies {
+            dependency "org.apache.avro:avro:1.11.1"
+            dependency "org.apache.iceberg:iceberg-api:${icebergVersion}"
+
+            dependencySet(group: 'org.apache.hadoop', version: hadoopVersion) {
+                entry("hadoop-mapreduce-client-core") {
+                    exclude "javax.ws.rs:jsr311-api"
+                }
+                entry("hadoop-hdfs") {
+                    exclude "javax.ws.rs:jsr311-api"
+                }
+                entry("hadoop-common") {
+                    exclude "javax.ws.rs:jsr311-api"
+                }
+                entry("hadoop-client") {
+                    exclude "javax.ws.rs:jsr311-api"
+                }
+            }
+
+            dependency 'com.hubspot.jinjava:jinjava:2.7.1'
+
+            dependency "org.codehaus.groovy:groovy-all:${groovyVersion}"
+            dependency 'org.spockframework:spock-core:2.3-groovy-3.0'
+
+            dependency "org.projectlombok:lombok:${lombokVersion}"
+            dependency "org.projectlombok:lombok:${lombokVersion}"
+            dependency "org.projectlombok:lombok:${lombokVersion}"
+            dependency "org.projectlombok:lombok:${lombokVersion}"
+        }
+    }
+
+    test {
+        useJUnitPlatform()
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
 }
 
-test {
-    useJUnitPlatform()
+javadoc {
+    destinationDir = file("${buildDir}/docs/javadoc")
+}
+
+def exportedProjects = [
+        ":spi-catalog",
+        ":spi-boot",
+        ":spi-boot-flink",
+        ":spi-boot-spark",
+        ":spi-boot",
+        "spi-event-store",
+        "spi-migration"
+]
+
+tasks.register("alljavadoc", Javadoc) {
+    source exportedProjects.collect { project(it).sourceSets.main.allJava }
+    classpath = files(exportedProjects.collect { project(it).sourceSets.main.compileClasspath })
+    destinationDir = file("${project.projectDir}/javadoc/build/")
 }

@@ -1,0 +1,45 @@
+plugins {
+    id 'groovy-gradle-plugin'
+}
+
+dependencies {
+    dependencies {
+//        implementation "org.apache.avro:avro"
+//        implementation "org.apache.iceberg:iceberg-api"
+//        implementation("org.apache.hadoop:hadoop-common")
+        implementation gradleApi()
+        implementation localGroovy()
+        implementation 'com.hubspot.jinjava:jinjava'
+
+
+
+        compileOnly "org.codehaus.groovy:groovy-all"
+
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+
+        testCompileOnly 'org.projectlombok:lombok'
+        testAnnotationProcessor 'org.projectlombok:lombok'
+
+        testImplementation gradleTestKit()
+        testImplementation 'org.codehaus.groovy:groovy-all'
+        testImplementation 'org.spockframework:spock-core'
+    }
+}
+
+gradlePlugin {
+    plugins {
+        spiApplicationPlugin {
+            id = 'com.crevasse.plugin'
+            implementationClass = "com.crevasse.plugin.CrevasseMigrationPlugin"
+        }
+    }
+}
+
+
+test {
+    useJUnitPlatform()
+    systemProperties = [
+            gradleVersion: gradle.gradleVersion,
+    ]
+}
