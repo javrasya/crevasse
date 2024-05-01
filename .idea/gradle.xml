@@ -9,6 +9,8 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/crevasse-bundled" />
+            <option value="$PROJECT_DIR$/crevasse-iceberg" />
             <option value="$PROJECT_DIR$/crevasse-plugin" />
           </set>
         </option>

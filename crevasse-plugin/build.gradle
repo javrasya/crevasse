@@ -9,8 +9,6 @@ dependencies {
 //        implementation("org.apache.hadoop:hadoop-common")
         implementation gradleApi()
         implementation localGroovy()
-        implementation 'com.hubspot.jinjava:jinjava'
-
 
 
         compileOnly "org.codehaus.groovy:groovy-all"

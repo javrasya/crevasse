@@ -1,4 +1,6 @@
 rootProject.name = 'crevasse'
 
 include 'crevasse-plugin'
+include 'crevasse-iceberg'
+include 'crevasse-bundled'
 

@@ -1,0 +1,25 @@
+dependencies {
+    dependencies {
+        implementation project(path: ":crevasse-bundled", configuration: 'shadow')
+
+        implementation "org.apache.avro:avro"
+        implementation "org.apache.iceberg:iceberg-api"
+        implementation "org.apache.iceberg:iceberg-core"
+        implementation("org.apache.hadoop:hadoop-common")
+        implementation "com.hubspot.jinjava:jinjava"
+        implementation "org.codehaus.groovy:groovy-all"
+
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+
+        testCompileOnly 'org.projectlombok:lombok'
+        testAnnotationProcessor 'org.projectlombok:lombok'
+
+        testImplementation 'org.spockframework:spock-core'
+    }
+}
+
+
+test {
+    useJUnitPlatform()
+}

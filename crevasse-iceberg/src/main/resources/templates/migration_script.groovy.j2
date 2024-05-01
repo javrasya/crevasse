@@ -1,0 +1,17 @@
+{% for import in imports %}import {{ import }}
+{% endfor %}
+
+@BaseScript MigrationBaseScript baseScript
+
+
+migrate {
+	step {{ step }}
+	description """
+	{%- for description in descriptions %}
+        * {{ description }}
+    {%- endfor %}
+    """
+
+{% for op in ops.split('\n') %}
+    {{ op }}{% endfor %}
+}

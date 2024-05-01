@@ -1,0 +1,40 @@
+plugins {
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+apply plugin: 'com.github.johnrengelman.shadow'
+
+tasks.jar.dependsOn tasks.shadowJar
+
+dependencies {
+    compileOnly("com.google.guava:guava") {
+        exclude group: 'com.google.code.findbugs'
+        exclude group: 'com.google.errorprone'
+        exclude group: 'com.google.j2objc'
+    }
+}
+
+shadowJar {
+    archiveClassifier.set(null)
+    configurations = [project.configurations.compileClasspath]
+    zip64 true
+
+    // include the LICENSE and NOTICE files for the shaded Jar
+    from(projectDir) {
+        include 'LICENSE'
+        include 'NOTICE'
+    }
+
+    dependencies {
+        exclude(dependency('org.slf4j:slf4j-api'))
+        exclude(dependency('org.checkerframework:checker-qual'))
+    }
+
+    relocate 'com.google.common', 'com.crevasse.relocated.com.google.common'
+
+    minimize()
+}
+
+jar {
+    archiveClassifier.set('empty')
+}
