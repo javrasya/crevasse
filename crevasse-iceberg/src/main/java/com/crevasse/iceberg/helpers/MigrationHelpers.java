@@ -1,7 +1,7 @@
 package com.crevasse.iceberg.helpers;
 
 import com.crevasse.iceberg.MigrationContext;
-import com.crevasse.iceberg.MigrationScript;
+import com.crevasse.iceberg.MigrationScriptContainer;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -9,7 +9,6 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.apache.avro.Schema;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.iceberg.catalog.TableIdentifier;
 import org.apache.iceberg.hadoop.HadoopCatalog;
@@ -30,9 +29,11 @@ public class MigrationHelpers {
     }
   }
 
-  public static List<MigrationScript> scanExistingMigrationScripts(
-      String pathToMigrationScripts, Schema avroSchema) throws IOException {
-    final Path migrationScriptFolder = Paths.get(pathToMigrationScripts, avroSchema.getName());
+  public static List<MigrationScriptContainer> scanExistingMigrationScripts(
+      String pathToMigrationScripts, TableIdentifier tableIdentifier) throws IOException {
+    final Path migrationScriptFolder =
+        Paths.get(
+            pathToMigrationScripts, tableIdentifier.namespace() + "_" + tableIdentifier.name());
 
     if (!Files.exists(migrationScriptFolder)) {
       migrationScriptFolder.toFile().mkdirs();
@@ -45,7 +46,7 @@ public class MigrationHelpers {
                   f.getFileName().toString().startsWith("migration_")
                       && f.getFileName().toString().endsWith(".groovy"))
           .map(Path::toAbsolutePath)
-          .map(MigrationScript::fromPath)
+          .map(MigrationScriptContainer::fromPath)
           .collect(Collectors.toList());
     }
   }

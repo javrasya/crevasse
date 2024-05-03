@@ -1,10 +1,12 @@
 package com.crevasse.iceberg;
 
 import com.crevasse.iceberg.ops.TableOperation;
+import com.crevasse.relocated.com.google.common.base.Preconditions;
 import com.crevasse.relocated.com.google.common.collect.ImmutableMap;
 import com.hubspot.jinjava.Jinjava;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
+import groovy.lang.Script;
 import groovy.transform.BaseScript;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -16,26 +18,31 @@ import java.util.stream.Collectors;
 import lombok.Getter;
 
 @Getter
-public class MigrationScript implements Serializable {
-  private final String code;
+public class MigrationScriptContainer implements Serializable {
+  private final MigrationBaseScript script;
 
-  public MigrationScript(String code) {
-    this.code = code;
+  private MigrationScriptContainer(MigrationBaseScript script) {
+    this.script = script;
   }
 
-  public static MigrationScript fromPath(Path path) {
+  public static MigrationScriptContainer fromScript(MigrationBaseScript script) {
+    return new MigrationScriptContainer(script);
+  }
+
+  public static MigrationScriptContainer fromPath(Path path) {
     try {
-      final String code = getScript(path);
-      return new MigrationScript(code);
+      final String code = getScriptCode(path);
+
+      return new MigrationScriptContainer(getScript(code));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
 
-  public static MigrationScript fromResource(String resource) {
+  public static MigrationScriptContainer fromResource(String resource) {
     try {
       final String code = readResource(resource);
-      return new MigrationScript(code);
+      return new MigrationScriptContainer(getScript(code));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -82,20 +89,27 @@ public class MigrationScript implements Serializable {
     return scriptPath;
   }
 
-  void run(MigrationStep migrationStep) throws IOException {
+  void run(MigrationStep migrationStep) {
     final Binding binding = new Binding();
     binding.setVariable("step", migrationStep);
-    final GroovyShell shell = new GroovyShell(binding);
-
-    shell.evaluate(code);
+    script.setBinding(binding);
+    script.invokeMethod("execute", null);
   }
 
-  private static String getScript(Path path) throws IOException {
+  private static MigrationBaseScript getScript(String code) {
+    final Script script = new GroovyShell().parse(code);
+    Preconditions.checkArgument(
+        script instanceof MigrationBaseScript, "Script must extend MigrationBaseScript");
+    script.run();
+    return (MigrationBaseScript) script;
+  }
+
+  private static String getScriptCode(Path path) throws IOException {
     return new String(Files.readAllBytes(path));
   }
 
   private static String readResource(String resource) throws IOException {
-    try (InputStream in = MigrationScript.class.getResourceAsStream(resource)) {
+    try (InputStream in = MigrationScriptContainer.class.getResourceAsStream(resource)) {
       return new BufferedReader(
               new InputStreamReader(Objects.requireNonNull(in), StandardCharsets.UTF_8))
           .lines()

@@ -16,29 +16,35 @@ import lombok.Builder;
 import lombok.Singular;
 import org.apache.iceberg.Schema;
 import org.apache.iceberg.avro.AvroSchemaUtil;
+import org.apache.iceberg.catalog.TableIdentifier;
 import org.apache.iceberg.types.Types;
 
 public class MigrationScriptGenerator implements Serializable {
 
-  private final Path scriptPath;
+  private final Path scriptDir;
+  private final TableIdentifier tableIdentifier;
   private final org.apache.avro.Schema avroSchema;
   private final List<String> ignoredColumns;
 
   @Builder
   public MigrationScriptGenerator(
-      Path scriptPath, org.apache.avro.Schema avroSchema, @Singular List<String> ignoredColumns) {
-    this.scriptPath = scriptPath;
+      Path scriptDir,
+      TableIdentifier tableIdentifier,
+      org.apache.avro.Schema avroSchema,
+      @Singular List<String> ignoredColumns) {
+    this.scriptDir = scriptDir;
+    this.tableIdentifier = tableIdentifier;
     this.avroSchema = avroSchema;
     this.ignoredColumns = ignoredColumns;
   }
 
   public void generateMigration() throws IOException {
     final MigrationContext contextWithFakeTable = getContextWithFakeTable();
-    final List<MigrationScript> groovyScriptFiles =
-        scanExistingMigrationScripts(scriptPath.toString(), avroSchema);
+    final List<MigrationScriptContainer> groovyScriptFiles =
+        scanExistingMigrationScripts(scriptDir.toString(), tableIdentifier);
 
     final List<MigrationStep> migrationSteps = new ArrayList<>();
-    for (MigrationScript groovyScriptFile : groovyScriptFiles) {
+    for (MigrationScriptContainer groovyScriptFile : groovyScriptFiles) {
       MigrationStep migrationStep = new MigrationStep();
       groovyScriptFile.run(migrationStep);
       migrationSteps.add(migrationStep);
@@ -66,10 +72,11 @@ public class MigrationScriptGenerator implements Serializable {
     System.out.println("Found " + tableOperations.size() + " operations to apply");
 
     Path genereatedScriptPath =
-        MigrationScript.generateAndGetPath(
+        MigrationScriptContainer.generateAndGetPath(
             maxOrderSoFar + 1,
             tableOperations,
-            Paths.get(scriptPath.toString(), avroSchema.getName()));
+            Paths.get(
+                scriptDir.toString(), tableIdentifier.namespace() + "_" + tableIdentifier.name()));
     System.out.println("Created migration script: " + genereatedScriptPath.toAbsolutePath());
   }
 

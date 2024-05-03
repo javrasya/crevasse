@@ -4,8 +4,6 @@ import static com.crevasse.iceberg.helpers.MigrationHelpers.scanExistingMigratio
 
 import com.crevasse.iceberg.helpers.MigrationHelpers;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -16,46 +14,40 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Singular;
-import org.apache.avro.Schema;
-import org.apache.avro.specific.SpecificRecord;
 import org.apache.iceberg.Table;
 import org.apache.iceberg.catalog.Catalog;
 import org.apache.iceberg.catalog.TableIdentifier;
 
-public class MigrationExecutor<T extends SpecificRecord> {
+public class MigrationExecutor {
   private static final String METADATA_STATE_KEY = "crevasse.migration.state";
   private static final String METADATA_LAST_UPDATED_AT_KEY = "crevasse.migration.last-applied-at";
 
   private final boolean dryRun;
   private final Supplier<Catalog> catalogSupplier;
-  private final Path scriptPath;
-  private final Class<T> schemaClass;
+  private final Path scriptDir;
   private final TableIdentifier tableIdentifier;
-  private final List<MigrationScript> additionalMigrationScripts;
+  private final List<MigrationScriptContainer> additionalMigrationScriptContainers;
 
   @Builder
   public MigrationExecutor(
       boolean dryRun,
-      Path scriptPath,
+      Path scriptDir,
       Supplier<Catalog> catalogSupplier,
-      Class<T> schemaClass,
       TableIdentifier tableIdentifier,
-      @Singular List<MigrationScript> additionalMigrationScripts) {
+      @Singular List<MigrationScriptContainer> additionalMigrationScriptContainers) {
     this.dryRun = dryRun;
-    this.scriptPath = scriptPath;
+    this.scriptDir = scriptDir;
     this.catalogSupplier = catalogSupplier;
-    this.schemaClass = schemaClass;
     this.tableIdentifier = tableIdentifier;
-    this.additionalMigrationScripts = additionalMigrationScripts;
+    this.additionalMigrationScriptContainers = additionalMigrationScriptContainers;
   }
 
-  public void apply()
-      throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, IOException {
-    List<MigrationScript> migrationScripts =
-        new ArrayList<>(scanExistingMigrationScripts(scriptPath.toString(), getAvroSchema()));
-    migrationScripts.addAll(additionalMigrationScripts);
+  public void run() throws IOException {
+    List<MigrationScriptContainer> migrationScriptContainers =
+        new ArrayList<>(scanExistingMigrationScripts(scriptDir.toString(), tableIdentifier));
+    migrationScriptContainers.addAll(additionalMigrationScriptContainers);
 
-    if (migrationScripts.isEmpty()) {
+    if (migrationScriptContainers.isEmpty()) {
       System.out.println("No migration scripts to apply found");
       return;
     }
@@ -68,9 +60,9 @@ public class MigrationExecutor<T extends SpecificRecord> {
     }
 
     final List<MigrationStep> migrationSteps = new ArrayList<>();
-    for (MigrationScript migrationScript : migrationScripts) {
+    for (MigrationScriptContainer migrationScriptContainer : migrationScriptContainers) {
       MigrationStep migrationStep = new MigrationStep();
-      migrationScript.run(migrationStep);
+      migrationScriptContainer.run(migrationStep);
       migrationSteps.add(migrationStep);
     }
 
@@ -123,12 +115,5 @@ public class MigrationExecutor<T extends SpecificRecord> {
         System.out.println("No migration found to apply");
       }
     }
-  }
-
-  private Schema getAvroSchema()
-      throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-    Method getClassSchema = schemaClass.getMethod("getClassSchema");
-
-    return (Schema) getClassSchema.invoke(null);
   }
 }

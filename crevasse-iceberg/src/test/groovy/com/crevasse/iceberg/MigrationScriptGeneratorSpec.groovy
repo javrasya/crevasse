@@ -4,6 +4,8 @@ import com.crevasse.iceberg.helpers.AvroSchemaBuilder
 import com.crevasse.iceberg.schema.ListColumnType
 import com.crevasse.iceberg.schema.MapColumnType
 import com.crevasse.iceberg.schema.StructColumnType
+import org.apache.avro.Schema
+import org.apache.iceberg.catalog.TableIdentifier
 import org.apache.iceberg.types.Type
 import spock.lang.Specification
 import spock.lang.TempDir
@@ -28,10 +30,7 @@ class MigrationScriptGeneratorSpec extends Specification {
             requiredArrayOfPrimitive("arrayField1", INT)
         }
 
-        def migrationScriptGenerator = MigrationScriptGenerator.builder()
-                .scriptPath(tempFolder.toPath())
-                .avroSchema(schema)
-                .build()
+        def migrationScriptGenerator = getMigrationScriptGenerator(schema)
 
         when:
         migrationScriptGenerator.generateMigration()
@@ -47,9 +46,9 @@ class MigrationScriptGeneratorSpec extends Specification {
         def firstMigrationScript = generatedMigrationScriptFiles[0]
         firstMigrationScript.name == "migration_0.groovy"
 
-        def migrationScript = MigrationScript.fromPath(firstMigrationScript.toPath())
+        def migrationScriptContainer = MigrationScriptContainer.fromPath(firstMigrationScript.toPath())
         def migrationStep = new MigrationStep()
-        migrationScript.run(migrationStep)
+        migrationScriptContainer.run(migrationStep)
 
         migrationStep.addedColumns.size() == 4
         migrationStep.addedColumns.containsKey("id")
@@ -78,6 +77,338 @@ class MigrationScriptGeneratorSpec extends Specification {
         migrationStep.updatedColumnTypes.size() == 0
     }
 
+    def "should remove column when the schema no longer has it"() {
+        given:
+        def schema = avroSchema("TestSchema") {
+            requiredInt("id")
+            requiredStruct("nested1", "NestedSchema") {
+                requiredInt("nested1Id")
+                requiredString("nested2Id")
+            }
+            requiredMapOfPrimitive("mapField1", STRING)
+            requiredArrayOfPrimitive("arrayField1", INT)
+        }
+
+        def newSchemaVersion = avroSchema("TestSchema") {
+            requiredStruct("nested1", "NestedSchema") {
+                requiredInt("nested1Id")
+                requiredString("nested2Id")
+            }
+            requiredMapOfPrimitive("mapField1", STRING)
+            requiredArrayOfPrimitive("arrayField1", INT)
+        }
+
+        def migrationScriptGenerator = getMigrationScriptGenerator(schema)
+
+        def migrationScriptGenerator2 = getMigrationScriptGenerator(newSchemaVersion)
+
+        when:
+        migrationScriptGenerator.generateMigration()
+
+        then:
+        def migrationScriptContainers = tempFolder.listFiles()
+        migrationScriptContainers.size() == 1
+
+        def generatedMigrationScriptFiles = migrationScriptContainers[0].listFiles()
+        generatedMigrationScriptFiles.size() == 1
+
+        def firstMigrationScript = generatedMigrationScriptFiles[0]
+        firstMigrationScript.name == "migration_0.groovy"
+
+        when:
+        migrationScriptGenerator2.generateMigration()
+
+        then:
+        def migrationScriptContainers2 = tempFolder.listFiles()
+        migrationScriptContainers2.size() == 1
+
+        def generatedMigrationScriptFiles2 = migrationScriptContainers2[0].listFiles().sort { it.name }
+        generatedMigrationScriptFiles2.size() == 2
+
+        def secondMigrationScript = generatedMigrationScriptFiles2[1]
+        secondMigrationScript.name == "migration_1.groovy"
+
+
+        def migrationStep = new MigrationStep()
+        def migrationScriptContainer = MigrationScriptContainer.fromPath(secondMigrationScript.toPath())
+        migrationScriptContainer.run(migrationStep)
+
+        migrationStep.addedColumns.size() == 0
+        migrationStep.removedColumns.size() == 1
+        migrationStep.removedColumns.contains("id")
+        migrationStep.columnsMarkedAsRequired.size() == 0
+        migrationStep.columnsMarkedAsOptional.size() == 0
+        migrationStep.updatedColumnTypes.size() == 0
+    }
+
+    def "should  add new column"() {
+        given:
+        def schema = avroSchema("TestSchema") {
+            requiredInt("id")
+            requiredStruct("nested1", "NestedSchema") {
+                requiredInt("nested1Id")
+                requiredString("nested2Id")
+            }
+            requiredMapOfPrimitive("mapField1", STRING)
+            requiredArrayOfPrimitive("arrayField1", INT)
+        }
+
+        def newSchemaVersion = avroSchema("TestSchema") {
+            requiredInt("id")
+            requiredStruct("nested1", "NestedSchema") {
+                requiredInt("nested1Id")
+                requiredString("nested2Id")
+            }
+            requiredMapOfPrimitive("mapField1", STRING)
+            requiredArrayOfPrimitive("arrayField1", INT)
+            requiredString("newField")
+        }
+
+        def migrationScriptGenerator = getMigrationScriptGenerator(schema)
+
+        def migrationScriptGenerator2 = getMigrationScriptGenerator(newSchemaVersion)
+
+        when:
+        migrationScriptGenerator.generateMigration()
+
+        then:
+        def migrationScriptContainers = tempFolder.listFiles()
+        migrationScriptContainers.size() == 1
+
+        def generatedMigrationScriptFiles = migrationScriptContainers[0].listFiles()
+        generatedMigrationScriptFiles.size() == 1
+
+        def firstMigrationScript = generatedMigrationScriptFiles[0]
+        firstMigrationScript.name == "migration_0.groovy"
+
+        when:
+        migrationScriptGenerator2.generateMigration()
+
+        then:
+        def migrationScriptContainers2 = tempFolder.listFiles()
+        migrationScriptContainers2.size() == 1
+
+        def generatedMigrationScriptFiles2 = migrationScriptContainers2[0].listFiles().sort { it.name }
+        generatedMigrationScriptFiles2.size() == 2
+
+        def secondMigrationScript = generatedMigrationScriptFiles2[1]
+        secondMigrationScript.name == "migration_1.groovy"
+
+        def migrationStep = new MigrationStep()
+        def migrationScriptContainer = MigrationScriptContainer.fromPath(secondMigrationScript.toPath())
+        migrationScriptContainer.run(migrationStep)
+
+        migrationStep.addedColumns.size() == 1
+        migrationStep.addedColumns.containsKey("newField")
+        migrationStep.addedColumns.get("newField").columnType.typeId == Type.TypeID.STRING
+
+        migrationStep.removedColumns.size() == 0
+        migrationStep.columnsMarkedAsRequired.size() == 0
+        migrationStep.columnsMarkedAsOptional.size() == 0
+        migrationStep.updatedColumnTypes.size() == 0
+    }
+
+    def "should mark column as required"() {
+        given:
+        def schema = avroSchema("TestSchema") {
+            optionalString("id")
+            requiredStruct("nested1", "NestedSchema") {
+                requiredInt("nested1Id")
+                requiredString("nested2Id")
+            }
+            requiredMapOfPrimitive("mapField1", STRING)
+            requiredArrayOfPrimitive("arrayField1", INT)
+        }
+
+        def newSchemaVersion = avroSchema("TestSchema") {
+            requiredInt("id")
+            requiredStruct("nested1", "NestedSchema") {
+                requiredInt("nested1Id")
+                requiredString("nested2Id")
+            }
+            requiredMapOfPrimitive("mapField1", STRING)
+            requiredArrayOfPrimitive("arrayField1", INT)
+        }
+
+        def migrationScriptGenerator = getMigrationScriptGenerator(schema)
+
+        def migrationScriptGenerator2 = getMigrationScriptGenerator(newSchemaVersion)
+
+        when:
+        migrationScriptGenerator.generateMigration()
+
+        then:
+        def migrationScriptContainers = tempFolder.listFiles()
+        migrationScriptContainers.size() == 1
+
+        def generatedMigrationScriptFiles = migrationScriptContainers[0].listFiles()
+        generatedMigrationScriptFiles.size() == 1
+
+        def firstMigrationScript = generatedMigrationScriptFiles[0]
+        firstMigrationScript.name == "migration_0.groovy"
+
+        when:
+        migrationScriptGenerator2.generateMigration()
+
+        then:
+        def migrationScriptContainers2 = tempFolder.listFiles()
+        migrationScriptContainers2.size() == 1
+
+        def generatedMigrationScriptFiles2 = migrationScriptContainers2[0].listFiles().sort { it.name }
+        generatedMigrationScriptFiles2.size() == 2
+
+        def secondMigrationScript = generatedMigrationScriptFiles2[1]
+        secondMigrationScript.name == "migration_1.groovy"
+
+        def migrationStep = new MigrationStep()
+        def migrationScriptContainer = MigrationScriptContainer.fromPath(secondMigrationScript.toPath())
+        migrationScriptContainer.run(migrationStep)
+
+        migrationStep.addedColumns.size() == 0
+        migrationStep.removedColumns.size() == 0
+        migrationStep.columnsMarkedAsRequired.size() == 1
+        migrationStep.columnsMarkedAsRequired.contains("id")
+        migrationStep.columnsMarkedAsOptional.size() == 0
+        migrationStep.updatedColumnTypes.size() == 0
+    }
+
+    def "should mark column as optional"() {
+        given:
+        def schema = avroSchema("TestSchema") {
+            requiredString("id")
+            requiredStruct("nested1", "NestedSchema") {
+                requiredInt("nested1Id")
+                requiredString("nested2Id")
+            }
+            requiredMapOfPrimitive("mapField1", STRING)
+            requiredArrayOfPrimitive("arrayField1", INT)
+        }
+
+        def newSchemaVersion = avroSchema("TestSchema") {
+            optionalString("id")
+            requiredStruct("nested1", "NestedSchema") {
+                requiredInt("nested1Id")
+                requiredString("nested2Id")
+            }
+            requiredMapOfPrimitive("mapField1", STRING)
+            requiredArrayOfPrimitive("arrayField1", INT)
+        }
+
+        def migrationScriptGenerator = getMigrationScriptGenerator(schema)
+
+        def migrationScriptGenerator2 = getMigrationScriptGenerator(newSchemaVersion)
+
+        when:
+        migrationScriptGenerator.generateMigration()
+
+        then:
+        def migrationScriptContainers = tempFolder.listFiles()
+        migrationScriptContainers.size() == 1
+
+        def generatedMigrationScriptFiles = migrationScriptContainers[0].listFiles()
+        generatedMigrationScriptFiles.size() == 1
+
+        def firstMigrationScript = generatedMigrationScriptFiles[0]
+        firstMigrationScript.name == "migration_0.groovy"
+
+        when:
+        migrationScriptGenerator2.generateMigration()
+
+        then:
+        def migrationScriptContainers2 = tempFolder.listFiles()
+        migrationScriptContainers2.size() == 1
+
+        def generatedMigrationScriptFiles2 = migrationScriptContainers2[0].listFiles().sort { it.name }
+        generatedMigrationScriptFiles2.size() == 2
+
+        def secondMigrationScript = generatedMigrationScriptFiles2[1]
+        secondMigrationScript.name == "migration_1.groovy"
+
+        def migrationStep = new MigrationStep()
+        def migrationScriptContainer = MigrationScriptContainer.fromPath(secondMigrationScript.toPath())
+        migrationScriptContainer.run(migrationStep)
+
+        migrationStep.addedColumns.size() == 0
+        migrationStep.removedColumns.size() == 0
+        migrationStep.columnsMarkedAsRequired.size() == 0
+        migrationStep.columnsMarkedAsOptional.size() == 1
+        migrationStep.columnsMarkedAsOptional.contains("id")
+        migrationStep.updatedColumnTypes.size() == 0
+    }
+
+    def "should update primitive column type"() {
+        given:
+        def schema = avroSchema("TestSchema") {
+            requiredInt("id")
+            requiredStruct("nested1", "NestedSchema") {
+                requiredInt("nested1Id")
+                requiredString("nested2Id")
+            }
+            requiredMapOfPrimitive("mapField1", STRING)
+            requiredArrayOfPrimitive("arrayField1", INT)
+        }
+
+        def newSchemaVersion = avroSchema("TestSchema") {
+            requiredLong("id")
+            requiredStruct("nested1", "NestedSchema") {
+                requiredInt("nested1Id")
+                requiredString("nested2Id")
+            }
+            requiredMapOfPrimitive("mapField1", STRING)
+            requiredArrayOfPrimitive("arrayField1", INT)
+        }
+
+        def migrationScriptGenerator = getMigrationScriptGenerator(schema)
+
+        def migrationScriptGenerator2 = getMigrationScriptGenerator(newSchemaVersion)
+
+        when:
+        migrationScriptGenerator.generateMigration()
+
+        then:
+        def migrationScriptContainers = tempFolder.listFiles()
+        migrationScriptContainers.size() == 1
+
+        def generatedMigrationScriptFiles = migrationScriptContainers[0].listFiles()
+        generatedMigrationScriptFiles.size() == 1
+
+        def firstMigrationScript = generatedMigrationScriptFiles[0]
+        firstMigrationScript.name == "migration_0.groovy"
+
+        when:
+        migrationScriptGenerator2.generateMigration()
+
+        then:
+        def migrationScriptContainers2 = tempFolder.listFiles()
+        migrationScriptContainers2.size() == 1
+
+        def generatedMigrationScriptFiles2 = migrationScriptContainers2[0].listFiles().sort { it.name }
+        generatedMigrationScriptFiles2.size() == 2
+
+        def secondMigrationScript = generatedMigrationScriptFiles2[1]
+        secondMigrationScript.name == "migration_1.groovy"
+
+        def migrationStep = new MigrationStep()
+        def migrationScriptContainer = MigrationScriptContainer.fromPath(secondMigrationScript.toPath())
+        migrationScriptContainer.run(migrationStep)
+
+        migrationStep.addedColumns.size() == 0
+        migrationStep.removedColumns.size() == 0
+        migrationStep.columnsMarkedAsRequired.size() == 0
+        migrationStep.columnsMarkedAsOptional.size() == 0
+        migrationStep.updatedColumnTypes.size() == 1
+        migrationStep.updatedColumnTypes.containsKey("id")
+        migrationStep.updatedColumnTypes.get("id").typeId == Type.TypeID.LONG
+    }
+
+
+    private MigrationScriptGenerator getMigrationScriptGenerator(Schema schema) {
+        MigrationScriptGenerator.builder()
+                .tableIdentifier(TableIdentifier.of("test", "test"))
+                .scriptDir(tempFolder.toPath())
+                .avroSchema(schema)
+                .build()
+    }
 
     static def avroSchema(String schemaName, @DelegatesTo(AvroSchemaBuilder) Closure closure) {
         def builder = new AvroSchemaBuilder(schemaName)
