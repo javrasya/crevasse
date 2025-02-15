@@ -6,7 +6,6 @@ plugins {
     id "com.github.davidmc24.gradle.plugin.avro" version "1.9.1"
     id 'com.adarshr.test-logger' version '3.2.0'
     id 'project-report'
-    id 'io.spring.dependency-management' version '1.0.10.RELEASE'
 }
 
 allprojects {
@@ -21,11 +20,7 @@ allprojects {
     project.version = '1.0-SNAPSHOT'
 }
 
-def groovyVersion = "3.0.13"
-def icebergVersion = "1.5.1"
-def hadoopVersion = "3.2.0"
-def lombokVersion = '1.18.24'
-def guavaVersion = '33.1.0-jre'
+
 subprojects {
 
     apply plugin: 'java'
@@ -34,7 +29,7 @@ subprojects {
     apply plugin: 'java-library'
     apply plugin: 'project-report'
     apply plugin: "com.adarshr.test-logger"
-    apply plugin: "io.spring.dependency-management"
+    apply from: rootProject.file('gradle/publish.gradle')
 
     repositories {
         mavenCentral()
@@ -70,40 +65,6 @@ subprojects {
                     "--add-opens", "java.base/sun.security.action=ALL-UNNAMED",
                     "--add-opens", "java.base/sun.util.calendar=ALL-UNNAMED"
             ]
-        }
-    }
-
-    dependencyManagement {
-        dependencies {
-            dependency "org.apache.avro:avro:1.11.1"
-            dependency "org.apache.iceberg:iceberg-api:${icebergVersion}"
-            dependency "org.apache.iceberg:iceberg-core:${icebergVersion}"
-
-            dependencySet(group: 'org.apache.hadoop', version: hadoopVersion) {
-                entry("hadoop-mapreduce-client-core") {
-                    exclude "javax.ws.rs:jsr311-api"
-                }
-                entry("hadoop-hdfs") {
-                    exclude "javax.ws.rs:jsr311-api"
-                }
-                entry("hadoop-common") {
-                    exclude "javax.ws.rs:jsr311-api"
-                }
-                entry("hadoop-client") {
-                    exclude "javax.ws.rs:jsr311-api"
-                }
-            }
-
-            dependency 'com.hubspot.jinjava:jinjava:2.7.1'
-
-            dependency "org.codehaus.groovy:groovy-all:${groovyVersion}"
-            dependency 'org.spockframework:spock-core:2.3-groovy-3.0'
-
-            dependency "org.projectlombok:lombok:${lombokVersion}"
-            dependency "org.projectlombok:lombok:${lombokVersion}"
-            dependency "org.projectlombok:lombok:${lombokVersion}"
-            dependency "org.projectlombok:lombok:${lombokVersion}"
-            dependency "com.google.guava:guava:${guavaVersion}"
         }
     }
 

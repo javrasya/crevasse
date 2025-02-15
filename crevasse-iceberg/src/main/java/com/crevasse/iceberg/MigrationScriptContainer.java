@@ -39,7 +39,7 @@ public class MigrationScriptContainer implements Serializable {
     }
   }
 
-  public static MigrationScriptContainer fromResource(String resource) {
+  public static MigrationScriptContainer fromResource(String resource, ClassLoader classLoader) {
     try {
       final String code = readResource(resource);
       return new MigrationScriptContainer(getScript(code));
@@ -67,7 +67,7 @@ public class MigrationScriptContainer implements Serializable {
       }
     }
 
-    imports.add(MigrationBaseScript.class.getName());
+    imports.add(MigrationBaseScript.class.getPackage().getName() + ".*");
     imports.add(BaseScript.class.getName());
 
     final String script =
@@ -97,7 +97,7 @@ public class MigrationScriptContainer implements Serializable {
   }
 
   private static MigrationBaseScript getScript(String code) {
-    final Script script = new GroovyShell().parse(code);
+    final Script script = new GroovyShell(MigrationScriptContainer.class.getClassLoader()).parse(code);
     Preconditions.checkArgument(
         script instanceof MigrationBaseScript, "Script must extend MigrationBaseScript");
     script.run();

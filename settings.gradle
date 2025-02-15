@@ -4,3 +4,31 @@ include 'crevasse-plugin'
 include 'crevasse-iceberg'
 include 'crevasse-bundled'
 
+def groovyVersion = "3.0.15"
+def icebergVersion = "1.5.1"
+def hadoopVersion = "3.2.0"
+def lombokVersion = '1.18.24'
+def guavaVersion = '33.1.0-jre'
+
+dependencyResolutionManagement {
+    versionCatalogs {
+        libs {
+            library("avro", "org.apache.avro:avro:1.11.1")
+            library("iceberg-api", "org.apache.iceberg:iceberg-api:${icebergVersion}")
+            library("iceberg-core", "org.apache.iceberg:iceberg-core:${icebergVersion}")
+            library("iceberg-aws", "org.apache.iceberg:iceberg-aws:${icebergVersion}")
+            library("iceberg-hive", "org.apache.iceberg:iceberg-hive-metastore:${icebergVersion}")
+            library("hadoop-mapreduce-client-core", "org.apache.hadoop:hadoop-mapreduce-client-core:${hadoopVersion}")
+            library("hadoop-hdfs", "org.apache.hadoop:hadoop-hdfs:${hadoopVersion}")
+            library("hadoop-common", "org.apache.hadoop:hadoop-common:${hadoopVersion}")
+            library("hadoop-client", "org.apache.hadoop:hadoop-client:${hadoopVersion}")
+            library("jinjava", "com.hubspot.jinjava:jinjava:2.7.1")
+            library("groovy-all", "org.codehaus.groovy:groovy-all:${groovyVersion}")
+            library("spock-core", "org.spockframework:spock-core:2.3-groovy-3.0")
+            library("lombok", "org.projectlombok:lombok:${lombokVersion}")
+            library("guava", "com.google.guava:guava:${guavaVersion}")
+        }
+    }
+}
+include 'crevasse-plugin-library'
+

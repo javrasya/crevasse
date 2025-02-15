@@ -7,7 +7,7 @@ apply plugin: 'com.github.johnrengelman.shadow'
 tasks.jar.dependsOn tasks.shadowJar
 
 dependencies {
-    compileOnly("com.google.guava:guava") {
+    compileOnly(libs.guava) {
         exclude group: 'com.google.code.findbugs'
         exclude group: 'com.google.errorprone'
         exclude group: 'com.google.j2objc'

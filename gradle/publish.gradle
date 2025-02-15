@@ -1,0 +1,60 @@
+apply plugin: "maven-publish"
+
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+}
+
+def sourcesJar = tasks.register("sourceJar", Jar) {
+    from sourceSets.main.allSource
+    archiveClassifier.set('sources')
+    duplicatesStrategy 'exclude'
+
+}
+
+def javadocJar = tasks.register("javadocJar", Jar) {
+    from javadoc.destinationDir
+    archiveClassifier.set('javadoc')
+    duplicatesStrategy 'exclude'
+}
+
+sourcesJar.configure {
+    dependsOn classes
+}
+
+javadocJar.configure {
+    dependsOn javadoc
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                if (tasks.matching({ task -> task.name == 'shadowJar' }).isEmpty()) {
+                    from components.java
+                } else {
+                    project.shadow.component(it)
+                }
+
+                artifact sourcesJar
+                artifact javadocJar
+
+                versionMapping {
+                    usage('java-api') {
+                        fromResolutionOf('runtimeClasspath')
+                    }
+                    usage('java-runtime') {
+                        fromResolutionResult()
+                    }
+                }
+            }
+        }
+
+        repositories {
+            mavenLocal()
+            mavenCentral()
+        }
+    }
+}

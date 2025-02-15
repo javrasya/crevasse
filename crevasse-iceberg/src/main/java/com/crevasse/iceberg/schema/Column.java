@@ -143,59 +143,37 @@ public class Column {
   }
 
   private Type getType(ColumnType columnType) {
-    switch (columnType.getTypeId()) {
-      case BOOLEAN:
-        return Types.BooleanType.get();
-      case INTEGER:
-        return Types.IntegerType.get();
-      case LONG:
-        return Types.LongType.get();
-      case FLOAT:
-        return Types.FloatType.get();
-      case DOUBLE:
-        return Types.DoubleType.get();
-      case DECIMAL:
-        return Types.DecimalType.of(0, 0);
-      case DATE:
-        return Types.DateType.get();
-      case TIME:
-        return Types.TimeType.get();
-      case TIMESTAMP:
-        return Types.TimestampType.withoutZone();
-      case STRING:
-        return Types.StringType.get();
-      case UUID:
-        return Types.UUIDType.get();
-      case FIXED:
-        return Types.FixedType.ofLength(0);
-      case BINARY:
-        return Types.BinaryType.get();
-      case STRUCT:
-        final List<Types.NestedField> fields =
-            ((StructColumnType) columnType)
-                .getColumns().stream()
-                    .map(
-                        column -> {
-                          if (column.isOptional()) {
-                            return Types.NestedField.optional(
-                                0, column.getName(), column.getType(), column.getDoc());
-                          } else {
-                            return Types.NestedField.required(
-                                0, column.getName(), column.getType(), column.getDoc());
-                          }
-                        })
-                    .collect(Collectors.toList());
+    if (columnType instanceof PrimitiveColumnType) {
+      return ((PrimitiveColumnType) columnType).getType();
+    } else {
+      switch (columnType.getTypeId()) {
+        case STRUCT:
+          final List<Types.NestedField> fields =
+              ((StructColumnType) columnType)
+                  .getColumns().stream()
+                      .map(
+                          column -> {
+                            if (column.isOptional()) {
+                              return Types.NestedField.optional(
+                                  0, column.getName(), column.getType(), column.getDoc());
+                            } else {
+                              return Types.NestedField.required(
+                                  0, column.getName(), column.getType(), column.getDoc());
+                            }
+                          })
+                      .collect(Collectors.toList());
 
-        return Types.StructType.of(fields);
-      case MAP:
-        final MapColumnType mapColumnType = (MapColumnType) columnType;
-        return Types.MapType.ofOptional(
-            0, 0, getType(mapColumnType.getKeyType()), getType(mapColumnType.getValueType()));
-      case LIST:
-        final ListColumnType listColumnType = (ListColumnType) columnType;
-        return Types.ListType.ofOptional(0, getType(listColumnType.getElementType()));
-      default:
-        throw new IllegalArgumentException("Unsupported type: " + columnType.getTypeId());
+          return Types.StructType.of(fields);
+        case MAP:
+          final MapColumnType mapColumnType = (MapColumnType) columnType;
+          return Types.MapType.ofOptional(
+              0, 0, getType(mapColumnType.getKeyType()), getType(mapColumnType.getValueType()));
+        case LIST:
+          final ListColumnType listColumnType = (ListColumnType) columnType;
+          return Types.ListType.ofOptional(0, getType(listColumnType.getElementType()));
+        default:
+          throw new IllegalArgumentException("Unsupported type: " + columnType.getTypeId());
+      }
     }
   }
 }

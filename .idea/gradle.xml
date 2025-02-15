@@ -12,9 +12,11 @@
             <option value="$PROJECT_DIR$/crevasse-bundled" />
             <option value="$PROJECT_DIR$/crevasse-iceberg" />
             <option value="$PROJECT_DIR$/crevasse-plugin" />
+            <option value="$PROJECT_DIR$/crevasse-plugin-library" />
           </set>
         </option>
       </GradleProjectSettings>
     </option>
+    <option name="offlineMode" value="true" />
   </component>
 </project>

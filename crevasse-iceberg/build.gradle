@@ -1,22 +1,22 @@
 dependencies {
-    dependencies {
-        implementation project(path: ":crevasse-bundled", configuration: 'shadow')
+        api project(path: ":crevasse-bundled", configuration: 'shadow')
+        api libs.avro
+        api libs.groovy.all
+        api libs.jinjava
+        api libs.hadoop.common
+        api libs.iceberg.api
+        api libs.iceberg.core
 
-        implementation "org.apache.avro:avro"
-        implementation "org.apache.iceberg:iceberg-api"
-        implementation "org.apache.iceberg:iceberg-core"
-        implementation("org.apache.hadoop:hadoop-common")
-        implementation "com.hubspot.jinjava:jinjava"
-        implementation "org.codehaus.groovy:groovy-all"
+        compileOnly libs.iceberg.hive
+        compileOnly libs.iceberg.aws
 
-        compileOnly 'org.projectlombok:lombok'
-        annotationProcessor 'org.projectlombok:lombok'
+        compileOnly libs.lombok
+        annotationProcessor libs.lombok
 
-        testCompileOnly 'org.projectlombok:lombok'
-        testAnnotationProcessor 'org.projectlombok:lombok'
+        testCompileOnly libs.lombok
+        testAnnotationProcessor libs.lombok
 
-        testImplementation 'org.spockframework:spock-core'
-    }
+        testImplementation libs.spock.core
 }
 
 

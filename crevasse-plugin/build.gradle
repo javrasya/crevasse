@@ -3,31 +3,25 @@ plugins {
 }
 
 dependencies {
-    dependencies {
-//        implementation "org.apache.avro:avro"
-//        implementation "org.apache.iceberg:iceberg-api"
-//        implementation("org.apache.hadoop:hadoop-common")
-        implementation gradleApi()
-        implementation localGroovy()
+    implementation gradleApi()
+    implementation localGroovy()
+    api project(":crevasse-iceberg")
 
+    api libs.groovy.all
 
-        compileOnly "org.codehaus.groovy:groovy-all"
+    compileOnly libs.lombok
+    annotationProcessor libs.lombok
+    testCompileOnly libs.lombok
+    testAnnotationProcessor libs.lombok
 
-        compileOnly 'org.projectlombok:lombok'
-        annotationProcessor 'org.projectlombok:lombok'
-
-        testCompileOnly 'org.projectlombok:lombok'
-        testAnnotationProcessor 'org.projectlombok:lombok'
-
-        testImplementation gradleTestKit()
-        testImplementation 'org.codehaus.groovy:groovy-all'
-        testImplementation 'org.spockframework:spock-core'
-    }
+    testImplementation gradleTestKit()
+    testImplementation libs.groovy.all
+    testImplementation libs.spock.core
 }
 
 gradlePlugin {
     plugins {
-        spiApplicationPlugin {
+        crevassePlugin {
             id = 'com.crevasse.plugin'
             implementationClass = "com.crevasse.plugin.CrevasseMigrationPlugin"
         }

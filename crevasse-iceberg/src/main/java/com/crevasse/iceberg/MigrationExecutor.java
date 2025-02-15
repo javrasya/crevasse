@@ -48,7 +48,7 @@ public class MigrationExecutor {
     migrationScriptContainers.addAll(additionalMigrationScriptContainers);
 
     if (migrationScriptContainers.isEmpty()) {
-      System.out.println("No migration scripts to apply found");
+      System.out.println("No migration scripts found to apply");
       return;
     }
 

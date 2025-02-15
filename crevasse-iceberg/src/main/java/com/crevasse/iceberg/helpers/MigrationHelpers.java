@@ -30,7 +30,7 @@ public class MigrationHelpers {
   }
 
   public static List<MigrationScriptContainer> scanExistingMigrationScripts(
-      String pathToMigrationScripts, TableIdentifier tableIdentifier) throws IOException {
+          String pathToMigrationScripts, TableIdentifier tableIdentifier) throws IOException {
     final Path migrationScriptFolder =
         Paths.get(
             pathToMigrationScripts, tableIdentifier.namespace() + "_" + tableIdentifier.name());

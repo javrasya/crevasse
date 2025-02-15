@@ -41,7 +41,8 @@ public class MigrationScriptGenerator implements Serializable {
   public void generateMigration() throws IOException {
     final MigrationContext contextWithFakeTable = getContextWithFakeTable();
     final List<MigrationScriptContainer> groovyScriptFiles =
-        scanExistingMigrationScripts(scriptDir.toString(), tableIdentifier);
+        scanExistingMigrationScripts(
+            scriptDir.toString(), tableIdentifier);
 
     final List<MigrationStep> migrationSteps = new ArrayList<>();
     for (MigrationScriptContainer groovyScriptFile : groovyScriptFiles) {

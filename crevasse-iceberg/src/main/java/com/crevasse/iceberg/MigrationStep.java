@@ -25,19 +25,16 @@ public class MigrationStep {
   private int _order;
   private String _description;
 
-  @PackageScope final Map<String, Column> addedColumns = new HashMap<>();
-  @PackageScope final Set<String> removedColumns = new HashSet<>();
-  @PackageScope final Set<String> columnsMarkedAsRequired = new HashSet<>();
-  @PackageScope final Set<String> columnsMarkedAsOptional = new HashSet<>();
-  @PackageScope final Map<String, PrimitiveColumnType> updatedColumnTypes = new HashMap<>();
-
-  private final Map<String, List<Column>> addedColumnsToParent = new HashMap<>();
-
-  private final List<PartitionColumn> addedPartitionColumns = new ArrayList<>();
-  private final List<String> removedPartitionColumns = new ArrayList<>();
-
-  private final Map<String, String> addedTableProperties = new HashMap<>();
-  private final Set<String> removedTableProperties = new HashSet<>();
+  @PackageScope final Map<String, Column> addedColumns = new LinkedHashMap<>();
+  @PackageScope final Set<String> removedColumns = new LinkedHashSet<>();
+  @PackageScope final Set<String> columnsMarkedAsRequired = new LinkedHashSet<>();
+  @PackageScope final Set<String> columnsMarkedAsOptional = new LinkedHashSet<>();
+  @PackageScope final Map<String, PrimitiveColumnType> updatedColumnTypes = new LinkedHashMap<>();
+  @PackageScope final Map<String, List<Column>> addedColumnsToParent = new LinkedHashMap<>();
+  @PackageScope final List<PartitionColumn> addedPartitionColumns = new LinkedList<>();
+  @PackageScope final List<String> removedPartitionColumns = new LinkedList<>();
+  @PackageScope final Map<String, String> addedTableProperties = new LinkedHashMap<>();
+  @PackageScope final Set<String> removedTableProperties = new LinkedHashSet<>();
 
   private final AtomicBoolean anyIncompatibleChange = new AtomicBoolean(false);
 

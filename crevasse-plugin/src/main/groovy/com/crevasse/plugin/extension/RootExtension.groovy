@@ -1,9 +1,9 @@
 package com.crevasse.plugin.extension
 
+import com.crevasse.plugin.extension.iceberg.IcebergHandler
 import org.gradle.api.Action
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 
 import javax.inject.Inject
@@ -11,7 +11,7 @@ import javax.inject.Inject
 class RootExtension {
     DirectoryProperty scriptDir;
 
-    ListProperty<MigrateHandler> migrateHandlers;
+    Property<IcebergHandler> icebergHandler;
 
     private ObjectFactory objects
 
@@ -19,12 +19,17 @@ class RootExtension {
     RootExtension(ObjectFactory objects) {
         this.objects = objects
         scriptDir = objects.directoryProperty()
-        migrateHandlers = objects.listProperty(MigrateHandler)
+        icebergHandler = objects.property(IcebergHandler)
     }
 
-    void migrate(Action<MigrateHandler> action) {
-        MigrateHandler newMigrateHandler = objects.newInstance(MigrateHandler)
-        action.execute(newMigrateHandler)
-        migrateHandlers.add(newMigrateHandler)
+    void iceberg(Action<IcebergHandler> action) {
+        def newIcebergHandler = objects.newInstance(IcebergHandler)
+        action.execute(newIcebergHandler)
+        icebergHandler.set(newIcebergHandler)
+        icebergHandler.disallowChanges()
+    }
+
+    List<DataFormatHandler> getDataFormatHandlers() {
+        return [icebergHandler.get()]
     }
 }
