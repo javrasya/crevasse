@@ -5,10 +5,8 @@ import com.crevasse.plugin.extension.DataFormatHandler
 import com.crevasse.plugin.extension.iceberg.IcebergHandler
 import org.apache.iceberg.catalog.TableIdentifier
 import org.gradle.api.DefaultTask
-import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
-import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.TaskAction
@@ -23,12 +21,12 @@ class MigrationExecutorTask extends DefaultTask {
     @Input
     final ListProperty<DataFormatHandler> dataFormatHandlers = project.objects.listProperty(DataFormatHandler)
 
-//    @Classpath
-//    final ConfigurableFileCollection classpath = project.objects.fileCollection() // Initialize the collection
-//            .from(project.sourceSets.main.runtimeClasspath) // Set it here
-//            .from({
-//                project.configurations.crevasse.resolve()
-//            })
+    //    @Classpath
+    //    final ConfigurableFileCollection classpath = project.objects.fileCollection() // Initialize the collection
+    //            .from(project.sourceSets.main.runtimeClasspath) // Set it here
+    //            .from({
+    //                project.configurations.crevasse.resolve()
+    //            })
 
     @TaskAction
     void execute() {

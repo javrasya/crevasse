@@ -30,14 +30,12 @@ public class MigrationHelpers {
   }
 
   public static List<MigrationScriptContainer> scanExistingMigrationScripts(
-          String pathToMigrationScripts, TableIdentifier tableIdentifier) throws IOException {
+      String pathToMigrationScripts, TableIdentifier tableIdentifier) throws IOException {
     final Path migrationScriptFolder =
         Paths.get(
-            pathToMigrationScripts, tableIdentifier.namespace() + "_" + tableIdentifier.name());
+            pathToMigrationScripts, tableIdentifier.namespace().toString(), tableIdentifier.name());
 
-    if (!Files.exists(migrationScriptFolder)) {
-      migrationScriptFolder.toFile().mkdirs();
-    }
+    Files.createDirectories(migrationScriptFolder);
 
     try (Stream<Path> paths = Files.list(migrationScriptFolder)) {
       return paths

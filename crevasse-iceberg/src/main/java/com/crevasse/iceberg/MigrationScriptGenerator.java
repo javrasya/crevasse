@@ -8,7 +8,6 @@ import com.crevasse.iceberg.ops.TableOperation;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -41,8 +40,7 @@ public class MigrationScriptGenerator implements Serializable {
   public void generateMigration() throws IOException {
     final MigrationContext contextWithFakeTable = getContextWithFakeTable();
     final List<MigrationScriptContainer> groovyScriptFiles =
-        scanExistingMigrationScripts(
-            scriptDir.toString(), tableIdentifier);
+        scanExistingMigrationScripts(scriptDir.toString(), tableIdentifier);
 
     final List<MigrationStep> migrationSteps = new ArrayList<>();
     for (MigrationScriptContainer groovyScriptFile : groovyScriptFiles) {
@@ -74,10 +72,11 @@ public class MigrationScriptGenerator implements Serializable {
 
     Path genereatedScriptPath =
         MigrationScriptContainer.generateAndGetPath(
+            scriptDir.toString(),
             maxOrderSoFar + 1,
             tableOperations,
-            Paths.get(
-                scriptDir.toString(), tableIdentifier.namespace() + "_" + tableIdentifier.name()));
+            tableIdentifier.namespace().toString(),
+            tableIdentifier.name());
     System.out.println("Created migration script: " + genereatedScriptPath.toAbsolutePath());
   }
 

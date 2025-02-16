@@ -53,8 +53,11 @@ afterEvaluate {
         }
 
         repositories {
-            mavenLocal()
-            mavenCentral()
+            if (publishLocally.toBoolean()) {
+                mavenLocal()
+            } else {
+                mavenCentral()
+            }
         }
     }
 }

@@ -1,6 +1,9 @@
+package {{ database}}.{{ table }}
+
 {% for import in imports %}import {{ import }}
 {% endfor %}
 
+//noinspection GroovyUnusedAssignment
 @BaseScript MigrationBaseScript baseScript
 
 

@@ -2,7 +2,6 @@ package com.crevasse.iceberg;
 
 import com.crevasse.iceberg.ops.TableOperation;
 import com.crevasse.relocated.com.google.common.base.Preconditions;
-import com.crevasse.relocated.com.google.common.collect.ImmutableMap;
 import com.hubspot.jinjava.Jinjava;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
@@ -49,7 +48,12 @@ public class MigrationScriptContainer implements Serializable {
   }
 
   static Path generateAndGetPath(
-      int stepNumber, List<TableOperation> tableOperations, Path directory) throws IOException {
+      String scriptDir,
+      int stepNumber,
+      List<TableOperation> tableOperations,
+      String database,
+      String table)
+      throws IOException {
     final Jinjava jinjava = new Jinjava();
     final StringBuilder opsBuilder = new StringBuilder();
     final Set<String> imports = new HashSet<>();
@@ -67,24 +71,22 @@ public class MigrationScriptContainer implements Serializable {
       }
     }
 
-    imports.add(MigrationBaseScript.class.getPackage().getName() + ".*");
+    imports.add(MigrationBaseScript.class.getName());
     imports.add(BaseScript.class.getName());
+    Map<String, Object> bindings = new HashMap<>();
+    bindings.put("ops", opsBuilder.toString());
+    bindings.put("step", stepNumber);
+    bindings.put("imports", imports.stream().sorted().collect(Collectors.toList()));
+    bindings.put(
+        "descriptions",
+        stepNumber == 0 ? Collections.singletonList("Initial schema creation") : descriptions);
+    bindings.put("database", database);
+    bindings.put("table", table);
 
     final String script =
-        jinjava.render(
-            readResource("/templates/migration_script.groovy.j2"),
-            ImmutableMap.of(
-                "ops",
-                opsBuilder.toString(),
-                "step",
-                stepNumber,
-                "imports",
-                imports.stream().sorted().collect(Collectors.toList()),
-                "descriptions",
-                stepNumber == 0
-                    ? Collections.singletonList("Initial schema creation")
-                    : descriptions));
-    Path scriptPath = Paths.get(directory.toString(), "migration_" + stepNumber + ".groovy");
+        jinjava.render(readResource("/templates/migration_script.groovy.j2"), bindings);
+    final Path directoryPath = Paths.get(scriptDir, database, table);
+    Path scriptPath = Paths.get(directoryPath.toString(), "migration_" + stepNumber + ".groovy");
     Files.write(scriptPath, script.getBytes());
     return scriptPath;
   }
@@ -97,7 +99,8 @@ public class MigrationScriptContainer implements Serializable {
   }
 
   private static MigrationBaseScript getScript(String code) {
-    final Script script = new GroovyShell(MigrationScriptContainer.class.getClassLoader()).parse(code);
+    final Script script =
+        new GroovyShell(MigrationScriptContainer.class.getClassLoader()).parse(code);
     Preconditions.checkArgument(
         script instanceof MigrationBaseScript, "Script must extend MigrationBaseScript");
     script.run();

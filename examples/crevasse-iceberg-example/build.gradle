@@ -1,0 +1,38 @@
+plugins {
+    id 'java'
+    id 'groovy'
+    id "com.github.davidmc24.gradle.plugin.avro" version "1.9.1"
+    id 'com.crevasse.plugin' version "1.0-SNAPSHOT"
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+apply plugin: "com.github.davidmc24.gradle.plugin.avro"
+
+sourceSets.main.java.srcDir new File(buildDir, 'generated-main-avro-java')
+sourceSets.test.java.srcDir new File(buildDir, 'generated-test-avro-java')
+
+dependencies {
+    implementation "org.apache.avro:avro:1.11.1"
+}
+
+crevasse {
+    scriptDir = file("./migrations")
+    iceberg {
+        catalogs {
+            hadoop {
+                name "my_catalog"
+                warehouse file("./database").path
+                schemas {
+                    mySchema1 {
+                        table "my_db.my_table"
+                        schemaName "com.crevasse.MyRecord1"
+                    }
+                }
+            }
+        }
+    }
+}

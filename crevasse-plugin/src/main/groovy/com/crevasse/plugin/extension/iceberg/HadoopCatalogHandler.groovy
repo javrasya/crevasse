@@ -17,7 +17,7 @@ class HadoopCatalogHandler extends CatalogHandler {
     @Override
     Catalog getCatalog() {
         return CatalogLoader.hadoop(
-                "glue",
+                "hadoop",
                 new Configuration(),
                 [
                         "warehouse": warehouse.get()

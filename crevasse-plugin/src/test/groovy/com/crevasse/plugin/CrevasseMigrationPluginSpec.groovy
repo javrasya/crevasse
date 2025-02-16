@@ -68,7 +68,6 @@ class CrevasseMigrationPluginSpec extends Specification {
             sourceSets.test.java.srcDir new File(buildDir, 'generated-test-avro-java')
             
             dependencies {
-                implementation "org.apache.avro:avro:1.11.1"
             }
         """
 
@@ -125,15 +124,18 @@ class CrevasseMigrationPluginSpec extends Specification {
         then:
         result.output.contains("BUILD SUCCESSFUL")
 
-        def migrationScriptContainers = scriptPath.listFiles()
-        migrationScriptContainers.size() == 1
-        migrationScriptContainers[0].name == "my_db_my_table"
+        def folderToKeepDatabases = scriptPath.listFiles()
+        folderToKeepDatabases.size() == 1
+        folderToKeepDatabases[0].name == "my_db"
 
+        def folderToKeepTables = folderToKeepDatabases[0].listFiles()
+        folderToKeepTables.size() == 1
+        folderToKeepTables[0].name == "my_table"
 
-        def generatedMigrationScriptFiles = migrationScriptContainers[0].listFiles()
-        generatedMigrationScriptFiles.size() == 1
+        def folderToKeepGeneratedMigrationScripts = folderToKeepTables[0].listFiles()
+        folderToKeepGeneratedMigrationScripts.size() == 1
 
-        def firstMigrationScript = generatedMigrationScriptFiles[0]
+        def firstMigrationScript = folderToKeepGeneratedMigrationScripts[0]
         firstMigrationScript.name == "migration_0.groovy"
     }
 
@@ -162,8 +164,8 @@ class CrevasseMigrationPluginSpec extends Specification {
         when: "tasks listed"
         def result = run("tasks")
 
-        then: "result contains executeMigrations task"
-        result.output.contains("executeMigrations")
+        then: "result contains applyMigrations task"
+        result.output.contains("applyMigrations")
 
         when: "the task runs to generate migration scripts"
         result = run("generateMigrationScripts")
@@ -171,8 +173,8 @@ class CrevasseMigrationPluginSpec extends Specification {
         then: "the status is successful"
         result.output.contains("BUILD SUCCESSFUL")
 
-        when: "the task runs to execute the migration scripts (either generated or manually created)"
-        result = run("executeMigrations")
+        when: "the task runs to apply the migration scripts (either generated or manually created)"
+        result = run("applyMigrations")
 
         then: "the status is successful"
         result.output.contains("BUILD SUCCESSFUL")

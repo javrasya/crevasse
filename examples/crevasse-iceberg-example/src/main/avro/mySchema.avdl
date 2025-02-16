@@ -1,0 +1,8 @@
+@namespace("com.crevasse")
+protocol MySchema1 {
+	record MyRecord1 {
+		string name;
+		int age;
+		time_ms? timestamp;
+	}
+}

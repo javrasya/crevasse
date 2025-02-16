@@ -27,8 +27,19 @@ class CrevasseMigrationPlugin implements Plugin<Project> {
                 }
             }
 
+            project.sourceSets {
+                migrations {
+                    java.srcDirs = ['migrations']
+                    compileClasspath += project.configurations.crevasse
+                    runtimeClasspath += project.configurations.crevasse
+                }
+            }
 
-            project.tasks.register("executeMigrations", MigrationExecutorTask) {
+//            project.sourceSets.migrations.java.srcDir new File(project.projectDir, extension.scriptDir.get().asFile.toString())
+
+
+
+            project.tasks.register("applyMigrations", MigrationExecutorTask) {
                 group = "migration"
                 description = "Execute crevasse migrations."
                 dependsOn project.classes
@@ -46,7 +57,6 @@ class CrevasseMigrationPlugin implements Plugin<Project> {
                 scriptDir.set(extension.scriptDir)
                 dataFormatHandlers.set(extension.dataFormatHandlers)
             }
-            project.sourceSets.main.java.srcDir new File(project.projectDir, extension.scriptDir.get().asFile.toString())
 
         }
     }

@@ -19,7 +19,8 @@ import static com.crevasse.plugin.utils.ReflectionUtils.getSchema
 
 class MigrationScriptGeneratorTask extends DefaultTask {
 
-    @InputDirectory
+    @InputFiles
+    @Optional
     final DirectoryProperty scriptDir = project.objects.directoryProperty()
 
     @Input
@@ -33,6 +34,13 @@ class MigrationScriptGeneratorTask extends DefaultTask {
 
     @TaskAction
     void execute() {
+        project.logger.lifecycle("Generating migration scripts..")
+
+        def scriptDirAsFile = scriptDir.get().asFile
+        if (!scriptDirAsFile.exists()) {
+            scriptDirAsFile.mkdirs()
+        }
+
         dataFormatHandlers.get().forEach {
             switch (it.dataFormatType) {
                 case ICEBERG:
