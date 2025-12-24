@@ -92,7 +92,11 @@ public class Column {
                 name, ((ListColumnType) columnType).getElementType().code()));
         break;
       case MAP:
-        sb.append(String.format("mapCol('%s')", name));
+        MapColumnType mapType = (MapColumnType) columnType;
+        sb.append(
+            String.format(
+                "mapCol('%s', %s, %s)",
+                name, mapType.getKeyType().code(), mapType.getValueType().code()));
         break;
       case STRUCT:
         sb.append(String.format("structCol('%s')", name));
@@ -101,13 +105,11 @@ public class Column {
         throw new IllegalArgumentException("Unsupported type: " + columnType.getTypeId());
     }
 
-    // Handle struct and map types with closures
+    // Handle struct types with closures
     if (columnType.getTypeId() == Type.TypeID.STRUCT) {
       appendStructNullabilityAndContent(sb);
-    } else if (columnType.getTypeId() == Type.TypeID.MAP) {
-      appendMapNullabilityAndContent(sb);
     } else {
-      // For primitive and list types, add fluent methods
+      // For primitive, list, and map types, add fluent methods
       appendNullabilityAndDoc(sb);
     }
 
@@ -139,25 +141,6 @@ public class Column {
       sb.append(".nullable {\n\t\t");
     }
     sb.append(nestedContent);
-    sb.append("\n\t}");
-
-    // Add .doc() if present (after the closure)
-    if (doc != null) {
-      sb.append(String.format(".doc('%s')", escapeString(doc)));
-    }
-  }
-
-  private void appendMapNullabilityAndContent(StringBuilder sb) {
-    MapColumnType mapType = (MapColumnType) columnType;
-
-    // Use nullability method with closure
-    if (!isOptional) {
-      sb.append(".notNullable {\n\t\t");
-    } else {
-      sb.append(".nullable {\n\t\t");
-    }
-    sb.append(String.format("key(%s)\n\t\t", mapType.getKeyType().code()));
-    sb.append(String.format("value(%s)", mapType.getValueType().code()));
     sb.append("\n\t}");
 
     // Add .doc() if present (after the closure)

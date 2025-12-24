@@ -124,8 +124,8 @@ public class StructTypeHandler implements WithColumnTypesUtilities {
     return builder;
   }
 
-  public MapColumnBuilder mapCol(String name) {
-    MapColumnBuilder builder = new MapColumnBuilder(name);
+  public MapColumnBuilder mapCol(String name, ColumnType keyType, ColumnType valueType) {
+    MapColumnBuilder builder = new MapColumnBuilder(name, keyType, valueType);
     columnBuilders.add(builder);
     return builder;
   }
@@ -136,19 +136,4 @@ public class StructTypeHandler implements WithColumnTypesUtilities {
     return builder;
   }
 
-  // === Inner class for map key/value handling ===
-
-  @Getter
-  public static class MapTypeHandler implements WithColumnTypesUtilities {
-    private ColumnType keyType;
-    private ColumnType valueType;
-
-    public void key(ColumnType columnType) {
-      keyType = columnType;
-    }
-
-    public void value(ColumnType columnType) {
-      valueType = columnType;
-    }
-  }
 }

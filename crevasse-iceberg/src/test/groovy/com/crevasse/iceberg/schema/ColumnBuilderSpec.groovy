@@ -159,15 +159,14 @@ class ColumnBuilderSpec extends Specification {
         column.isRequired()
     }
 
-    def "MapColumnBuilder should create map column with key/value types via closure"() {
+    def "MapColumnBuilder should create map column with key/value types as arguments"() {
         given:
-        def builder = new MapColumnBuilder("metadata")
+        def keyType = new PrimitiveColumnType(Types.StringType.get())
+        def valueType = new PrimitiveColumnType(Types.IntegerType.get())
+        def builder = new MapColumnBuilder("metadata", keyType, valueType)
 
         when:
-        def column = builder.nullable {
-            key(stringType())
-            value(intType())
-        }.build()
+        def column = builder.build()
 
         then:
         column.name == "metadata"
@@ -179,29 +178,31 @@ class ColumnBuilderSpec extends Specification {
         mapType.valueType.typeId == Type.TypeID.INTEGER
     }
 
-    def "MapColumnBuilder should support notNullable with closure"() {
+    def "MapColumnBuilder should support notNullable"() {
         given:
-        def builder = new MapColumnBuilder("metadata")
+        def keyType = new PrimitiveColumnType(Types.StringType.get())
+        def valueType = new PrimitiveColumnType(Types.StringType.get())
+        def builder = new MapColumnBuilder("metadata", keyType, valueType)
 
         when:
-        def column = builder.notNullable {
-            key(stringType())
-            value(stringType())
-        }.build()
+        def column = builder.notNullable().build()
 
         then:
         column.isRequired()
     }
 
-    def "MapColumnBuilder should throw exception when key or value not defined"() {
+    def "MapColumnBuilder should support doc"() {
         given:
-        def builder = new MapColumnBuilder("metadata")
+        def keyType = new PrimitiveColumnType(Types.StringType.get())
+        def valueType = new PrimitiveColumnType(Types.IntegerType.get())
+        def builder = new MapColumnBuilder("metadata", keyType, valueType)
 
         when:
-        builder.build()
+        def column = builder.notNullable().doc("Map documentation").build()
 
         then:
-        thrown(IllegalStateException)
+        column.isRequired()
+        column.doc == "Map documentation"
     }
 
     def "Column.code() should generate fluent DSL for primitive types"() {
@@ -254,7 +255,7 @@ class ColumnBuilderSpec extends Specification {
         code.contains("stringCol('city').notNullable()")
     }
 
-    def "Column.code() should generate fluent DSL for map types with closure"() {
+    def "Column.code() should generate fluent DSL for map types"() {
         given:
         def keyType = new PrimitiveColumnType(Types.StringType.get())
         def valueType = new PrimitiveColumnType(Types.IntegerType.get())
@@ -264,9 +265,20 @@ class ColumnBuilderSpec extends Specification {
         def code = column.code()
 
         then:
-        code.contains("mapCol('metadata').notNullable {")
-        code.contains("key(stringType())")
-        code.contains("value(intType())")
+        code == "mapCol('metadata', stringType(), intType()).notNullable()"
+    }
+
+    def "Column.code() should generate fluent DSL for nullable map types"() {
+        given:
+        def keyType = new PrimitiveColumnType(Types.StringType.get())
+        def valueType = new PrimitiveColumnType(Types.IntegerType.get())
+        def column = new Column("metadata", new MapColumnType(keyType, valueType), true, null)
+
+        when:
+        def code = column.code()
+
+        then:
+        code == "mapCol('metadata', stringType(), intType())"
     }
 
     def "Column.code() should generate fluent DSL for list types"() {

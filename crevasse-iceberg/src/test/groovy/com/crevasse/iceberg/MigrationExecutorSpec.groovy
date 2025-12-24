@@ -93,16 +93,10 @@ class MigrationExecutorSpec extends Specification {
                                 listCol('listColWithStructType', structType {
                                     stringCol('nestedStringCol').notNullable()
                                 }).notNullable()
-                                mapCol('mapCol').notNullable {
-                                    key(stringType())
-                                    value(intType())
-                                }
-                                mapCol('mapColWithStructType').notNullable {
-                                    key(stringType())
-                                    value(structType {
-                                        stringCol('nestedStringCol').notNullable()
-                                    })
-                                }
+                                mapCol('mapCol', stringType(), intType()).notNullable()
+                                mapCol('mapColWithStructType', stringType(), structType {
+                                    stringCol('nestedStringCol').notNullable()
+                                }).notNullable()
                                 timestampWithZoneCol('timestampWithZoneCol').notNullable()
                             }
                         }

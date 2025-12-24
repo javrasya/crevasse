@@ -343,7 +343,7 @@ protocol Events {
 | `bytes` | `binaryCol()` | Variable-length binary |
 | `record` | `structCol()` | Nested structure |
 | `array<T>` | `listCol()` | List/array |
-| `map<T>` | `mapCol()` | Key-value map |
+| `map<T>` | `mapCol(name, keyType, valueType)` | Key-value map |
 | `T?` (union with null) | `*Col(name)` or `*Col(name).nullable()` | Optional column (default) |
 
 ---
@@ -536,29 +536,20 @@ addColumns {
         stringCol('city').notNullable()
     })
 
-    // Map
-    mapCol('metadata').nullable {
-        key(stringType())
-        value(stringType())
-    }
+    // Map (key and value types as arguments)
+    mapCol('metadata', stringType(), stringType())
 
     // Map with struct values
-    mapCol('settings').nullable {
-        key(stringType())
-        value(structType {
-            stringCol('value').notNullable()
-            boolCol('encrypted').notNullable()
-        })
-    }
+    mapCol('settings', stringType(), structType {
+        stringCol('value').notNullable()
+        boolCol('encrypted').notNullable()
+    })
 
     // Deeply nested structures
     structCol('profile').nullable {
         stringCol('bio')
         listCol('interests', stringType())
-        mapCol('social_links').nullable {
-            key(stringType())
-            value(stringType())
-        }
+        mapCol('social_links', stringType(), stringType())
     }
 }
 ```
@@ -721,10 +712,7 @@ migrate {
         })
 
         // Key-value metadata
-        mapCol('custom_attributes').nullable {
-            key(stringType())
-            value(stringType())
-        }
+        mapCol('custom_attributes', stringType(), stringType())
     }
 }
 ```
@@ -811,10 +799,7 @@ migrate {
             intCol('quantity').notNullable()
             decimalCol('unit_price', 10, 2).notNullable()
             decimalCol('total_price', 10, 2).notNullable()
-            mapCol('attributes').nullable {
-                key(stringType())
-                value(stringType())
-            }
+            mapCol('attributes', stringType(), stringType())
         }).notNullable()
 
         decimalCol('subtotal', 12, 2).notNullable()
