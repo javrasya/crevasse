@@ -1,25 +1,66 @@
 ![crevasse-logo.png](asssets/crevasse-logo.png)
 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Java](https://img.shields.io/badge/Java-11%2B-orange.svg)](https://openjdk.org/)
+[![Gradle](https://img.shields.io/badge/Gradle-9.x-green.svg)](https://gradle.org/)
+[![Iceberg](https://img.shields.io/badge/Apache%20Iceberg-1.5.x-blueviolet.svg)](https://iceberg.apache.org/)
+
 # Crevasse: Schema Migrations for Lakehouse Table Formats
 
-Crevasse is a **table-format agnostic** schema migration framework for modern lakehouse table formats. Inspired by Django's migration system, it provides a Groovy-based DSL for defining table schema changes and a Gradle plugin to generate and apply migrations.
+> **Django-style migrations for your data lakehouse.**
+> Define schemas in Avro. Generate migrations automatically. Apply with one command.
 
-Write your migrations once, apply them to Apache Iceberg today, and to Hudi or Delta Lake tomorrow.
+Crevasse is a **table-format agnostic** schema migration framework for modern lakehouse table formats. It provides a Groovy-based DSL for defining table schema changes and a Gradle plugin to generate and apply migrations.
 
 ## Key Features
 
-- **Table Format Agnostic**: Core DSL is independent of the underlying table format
-- **Avro-Driven Schema Management**: Define table schemas as Avro schemas, detect drift automatically
-- **Automatic Migration Generation**: Generate migration scripts when your Avro schemas change
-- **Manual Migration Support**: Write custom migrations using the expressive Groovy DSL
-- **Versioned Migrations**: Track applied migrations in table metadata, similar to Django
-- **Immutable History**: Once applied, migrations form an immutable history of your table's evolution
-- **IDE-Friendly**: Full autocompletion, navigation, and refactoring support in IntelliJ IDEA and other Groovy-aware IDEs
+- 🔄 **Table Format Agnostic**: Core DSL is independent of the underlying table format
+- 📋 **Avro-Driven Schema Management**: Define table schemas as Avro schemas, detect drift automatically
+- ⚡ **Automatic Migration Generation**: Generate migration scripts when your Avro schemas change
+- ✍️ **Manual Migration Support**: Write custom migrations using the expressive Groovy DSL
+- 📦 **Versioned Migrations**: Track applied migrations in table metadata, similar to Django
+- 🔒 **Immutable History**: Once applied, migrations form an immutable history of your table's evolution
+- 🛠️ **IDE-Friendly**: Full autocompletion, navigation, and refactoring support in IntelliJ IDEA and other Groovy-aware IDEs
+
+---
+
+## Why Crevasse?
+
+| Feature | Crevasse | Raw SQL | YAML/JSON Config | Custom Scripts |
+|---------|:--------:|:-------:|:----------------:|:--------------:|
+| **IDE Autocomplete** | ✅ Full | ⚠️ Partial | ❌ None | ❌ None |
+| **Type Safety** | ✅ Full | ❌ None | ❌ None | ⚠️ Varies |
+| **Schema Drift Detection** | ✅ Auto | ❌ Manual | ❌ Manual | ❌ Manual |
+| **Table Format Agnostic** | ✅ Yes | ❌ No | ⚠️ Varies | ❌ No |
+| **Versioned History** | ✅ Built-in | ❌ Manual | ❌ Manual | ❌ Manual |
+| **Refactoring Support** | ✅ Full | ❌ None | ❌ None | ❌ None |
+
+---
+
+## Get Started in 60 Seconds
+
+```bash
+# 1️⃣ Add to build.gradle
+plugins {
+    id 'com.crevasse.plugin' version '1.0-SNAPSHOT'
+}
+
+# 2️⃣ Define your schema (src/main/avro/user.avdl)
+# @namespace("com.example")
+# record User { string id; string name; }
+
+# 3️⃣ Generate and apply migrations
+./gradlew generateMigrationScripts applyMigrations
+```
+
+**That's it!** Your Iceberg table is created with the schema from your Avro definition.
 
 ---
 
 ## Table of Contents
 
+- [Why Crevasse?](#why-crevasse)
+- [Get Started in 60 Seconds](#get-started-in-60-seconds)
 - [Architecture](#architecture)
 - [Supported Table Formats](#supported-table-formats)
 - [IDE Support & Developer Experience](#ide-support--developer-experience)
@@ -41,29 +82,26 @@ Write your migrations once, apply them to Apache Iceberg today, and to Hudi or D
 
 Crevasse is designed with a **layered architecture** that separates the migration DSL from table format implementations:
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      Avro Schemas                            │
-│              (Source of truth for table structure)           │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    Migration DSL (Groovy)                    │
-│                                                              │
-│  • addColumns { stringCol(), structCol(), listCol() ... }   │
-│  • removeColumn, modifyColumns                               │
-│  • addPartitionColumns { year(), month(), bucket() ... }    │
-│  • addProperty, removeProperty                               │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                 Table Format Executors                       │
-├───────────────────┬───────────────────┬─────────────────────┤
-│   Apache Iceberg  │    Apache Hudi    │     Delta Lake      │
-│    (Supported)    │     (Planned)     │      (Planned)      │
-└───────────────────┴───────────────────┴─────────────────────┘
+```mermaid
+flowchart TB
+    subgraph Source["📋 Schema Definition"]
+        A[Avro Schemas<br/>*.avdl / *.avsc]
+    end
+
+    subgraph DSL["🛠️ Migration DSL (Groovy)"]
+        B[addColumns / removeColumn<br/>addPartitionColumns<br/>addProperty / removeProperty]
+    end
+
+    subgraph Executors["⚙️ Table Format Executors"]
+        C[Apache Iceberg<br/>✅ Supported]
+        D[Apache Hudi<br/>🔜 Planned]
+        E[Delta Lake<br/>🔜 Planned]
+    end
+
+    A --> B
+    B --> C
+    B --> D
+    B --> E
 ```
 
 This means:
