@@ -37,7 +37,7 @@ public class MigrationScriptGenerator implements Serializable {
     this.ignoredColumns = ignoredColumns;
   }
 
-  public void generateMigration() throws IOException {
+  public MigrationGenerationResult generateMigration() throws IOException {
     final MigrationContext contextWithFakeTable = getContextWithFakeTable();
     final List<MigrationScriptContainer> groovyScriptFiles =
         scanExistingMigrationScripts(scriptDir.toString(), tableIdentifier);
@@ -62,22 +62,27 @@ public class MigrationScriptGenerator implements Serializable {
     contextWithFakeTable.applyChanges();
 
     final List<TableOperation> tableOperations = getNextTableOperations(contextWithFakeTable);
+    final String database = tableIdentifier.namespace().toString();
+    final String table = tableIdentifier.name();
 
     if (tableOperations.isEmpty()) {
-      System.out.println("No changes detected in schema, skipping migration generation");
-      return;
+      return MigrationGenerationResult.noChanges(database, table);
     }
 
-    System.out.println("Found " + tableOperations.size() + " operations to apply");
-
-    Path genereatedScriptPath =
+    final int newStepNumber = maxOrderSoFar + 1;
+    Path generatedScriptPath =
         MigrationScriptContainer.generateAndGetPath(
             scriptDir.toString(),
-            maxOrderSoFar + 1,
+            newStepNumber,
             tableOperations,
-            tableIdentifier.namespace().toString(),
-            tableIdentifier.name());
-    System.out.println("Created migration script: " + genereatedScriptPath.toAbsolutePath());
+            database,
+            table);
+
+    List<String> operationDescriptions =
+        tableOperations.stream().flatMap(op -> op.getDescriptions().stream()).toList();
+
+    return MigrationGenerationResult.created(
+        database, table, generatedScriptPath, newStepNumber, operationDescriptions);
   }
 
   private List<TableOperation> getNextTableOperations(MigrationContext contextWithFakeTable) {

@@ -33,9 +33,15 @@ class MigrationScriptGeneratorSpec extends Specification {
         def migrationScriptGenerator = getMigrationScriptGenerator(schema)
 
         when:
-        migrationScriptGenerator.generateMigration()
+        def result = migrationScriptGenerator.generateMigration()
 
         then:
+        result.status == MigrationGenerationResult.Status.CREATED
+        result.database == "test"
+        result.table == "test"
+        result.stepNumber == 0
+        result.scriptPath != null
+        result.operations.size() == 4
 
         def namespaceFolders = tempFolder.listFiles()
         namespaceFolders.size() == 1
@@ -106,9 +112,12 @@ class MigrationScriptGeneratorSpec extends Specification {
         def migrationScriptGenerator2 = getMigrationScriptGenerator(newSchemaVersion)
 
         when:
-        migrationScriptGenerator.generateMigration()
+        def result1 = migrationScriptGenerator.generateMigration()
 
         then:
+        result1.status == MigrationGenerationResult.Status.CREATED
+        result1.stepNumber == 0
+
         def namespaceFolders = tempFolder.listFiles()
         namespaceFolders.size() == 1
 
@@ -122,9 +131,13 @@ class MigrationScriptGeneratorSpec extends Specification {
         firstMigrationScript.name == "migration_0.groovy"
 
         when:
-        migrationScriptGenerator2.generateMigration()
+        def result2 = migrationScriptGenerator2.generateMigration()
 
         then:
+        result2.status == MigrationGenerationResult.Status.CREATED
+        result2.stepNumber == 1
+        result2.operations.size() == 1
+
         def namespaceFolders2 = tempFolder.listFiles()
         namespaceFolders2.size() == 1
 
@@ -178,9 +191,12 @@ class MigrationScriptGeneratorSpec extends Specification {
         def migrationScriptGenerator2 = getMigrationScriptGenerator(newSchemaVersion)
 
         when:
-        migrationScriptGenerator.generateMigration()
+        def result1 = migrationScriptGenerator.generateMigration()
 
         then:
+        result1.status == MigrationGenerationResult.Status.CREATED
+        result1.stepNumber == 0
+
         def namespaceFolders = tempFolder.listFiles()
         namespaceFolders.size() == 1
 
@@ -194,9 +210,13 @@ class MigrationScriptGeneratorSpec extends Specification {
         firstMigrationScript.name == "migration_0.groovy"
 
         when:
-        migrationScriptGenerator2.generateMigration()
+        def result2 = migrationScriptGenerator2.generateMigration()
 
         then:
+        result2.status == MigrationGenerationResult.Status.CREATED
+        result2.stepNumber == 1
+        result2.operations.size() == 1
+
         def namespaceFolders2 = tempFolder.listFiles()
         namespaceFolders2.size() == 1
 
@@ -250,9 +270,12 @@ class MigrationScriptGeneratorSpec extends Specification {
         def migrationScriptGenerator2 = getMigrationScriptGenerator(newSchemaVersion)
 
         when:
-        migrationScriptGenerator.generateMigration()
+        def result1 = migrationScriptGenerator.generateMigration()
 
         then:
+        result1.status == MigrationGenerationResult.Status.CREATED
+        result1.stepNumber == 0
+
         def namespaceFolders = tempFolder.listFiles()
         namespaceFolders.size() == 1
 
@@ -266,9 +289,13 @@ class MigrationScriptGeneratorSpec extends Specification {
         firstMigrationScript.name == "migration_0.groovy"
 
         when:
-        migrationScriptGenerator2.generateMigration()
+        def result2 = migrationScriptGenerator2.generateMigration()
 
         then:
+        result2.status == MigrationGenerationResult.Status.CREATED
+        result2.stepNumber == 1
+        result2.operations.size() == 1
+
         def namespaceFolders2 = tempFolder.listFiles()
         namespaceFolders2.size() == 1
 
@@ -320,9 +347,12 @@ class MigrationScriptGeneratorSpec extends Specification {
         def migrationScriptGenerator2 = getMigrationScriptGenerator(newSchemaVersion)
 
         when:
-        migrationScriptGenerator.generateMigration()
+        def result1 = migrationScriptGenerator.generateMigration()
 
         then:
+        result1.status == MigrationGenerationResult.Status.CREATED
+        result1.stepNumber == 0
+
         def namespaceFolders = tempFolder.listFiles()
         namespaceFolders.size() == 1
 
@@ -336,9 +366,13 @@ class MigrationScriptGeneratorSpec extends Specification {
         firstMigrationScript.name == "migration_0.groovy"
 
         when:
-        migrationScriptGenerator2.generateMigration()
+        def result2 = migrationScriptGenerator2.generateMigration()
 
         then:
+        result2.status == MigrationGenerationResult.Status.CREATED
+        result2.stepNumber == 1
+        result2.operations.size() == 1
+
         def namespaceFolders2 = tempFolder.listFiles()
         namespaceFolders2.size() == 1
 
@@ -390,9 +424,12 @@ class MigrationScriptGeneratorSpec extends Specification {
         def migrationScriptGenerator2 = getMigrationScriptGenerator(newSchemaVersion)
 
         when:
-        migrationScriptGenerator.generateMigration()
+        def result1 = migrationScriptGenerator.generateMigration()
 
         then:
+        result1.status == MigrationGenerationResult.Status.CREATED
+        result1.stepNumber == 0
+
         def namespaceFolders = tempFolder.listFiles()
         namespaceFolders.size() == 1
 
@@ -406,9 +443,13 @@ class MigrationScriptGeneratorSpec extends Specification {
         firstMigrationScript.name == "migration_0.groovy"
 
         when:
-        migrationScriptGenerator2.generateMigration()
+        def result2 = migrationScriptGenerator2.generateMigration()
 
         then:
+        result2.status == MigrationGenerationResult.Status.CREATED
+        result2.stepNumber == 1
+        result2.operations.size() == 1
+
         def namespaceFolders2 = tempFolder.listFiles()
         namespaceFolders2.size() == 1
 
@@ -432,6 +473,33 @@ class MigrationScriptGeneratorSpec extends Specification {
         migrationStep.updatedColumnTypes.size() == 1
         migrationStep.updatedColumnTypes.containsKey("id")
         migrationStep.updatedColumnTypes.get("id").typeId == Type.TypeID.LONG
+    }
+
+    def "should return SKIPPED_NO_CHANGES when schema is unchanged"() {
+        given:
+        def schema = avroSchema("TestSchema") {
+            requiredInt("id")
+            requiredString("name")
+        }
+
+        def migrationScriptGenerator = getMigrationScriptGenerator(schema)
+
+        when:
+        def result1 = migrationScriptGenerator.generateMigration()
+
+        then:
+        result1.status == MigrationGenerationResult.Status.CREATED
+        result1.stepNumber == 0
+
+        when:
+        def result2 = migrationScriptGenerator.generateMigration()
+
+        then:
+        result2.status == MigrationGenerationResult.Status.SKIPPED_NO_CHANGES
+        result2.database == "test"
+        result2.table == "test"
+        result2.scriptPath == null
+        result2.operations == null
     }
 
 

@@ -1,5 +1,6 @@
 package com.crevasse.plugin.tasks
 
+import com.crevasse.iceberg.MigrationGenerationResult
 import com.crevasse.iceberg.MigrationScriptGenerator
 import com.crevasse.plugin.extension.DataFormatHandler
 import com.crevasse.plugin.extension.iceberg.IcebergHandler
@@ -19,6 +20,14 @@ import static com.crevasse.plugin.utils.ReflectionUtils.getSchema
 
 class MigrationScriptGeneratorTask extends DefaultTask {
 
+    // ANSI color codes
+    private static final String RESET = "\u001B[0m"
+    private static final String GREEN = "\u001B[32m"
+    private static final String YELLOW = "\u001B[33m"
+    private static final String CYAN = "\u001B[36m"
+    private static final String BOLD = "\u001B[1m"
+    private static final String DIM = "\u001B[2m"
+
     @InputFiles
     @Optional
     final DirectoryProperty scriptDir = project.objects.directoryProperty()
@@ -34,64 +43,83 @@ class MigrationScriptGeneratorTask extends DefaultTask {
 
     @TaskAction
     void execute() {
-        project.logger.lifecycle("Generating migration scripts..")
+        println ""
+        println "${BOLD}${CYAN}Crevasse Migration Script Generator${RESET}"
+        println "${DIM}${'─' * 50}${RESET}"
 
         def scriptDirAsFile = scriptDir.get().asFile
         if (!scriptDirAsFile.exists()) {
             scriptDirAsFile.mkdirs()
         }
 
+        def results = []
+
         dataFormatHandlers.get().forEach {
             switch (it.dataFormatType) {
                 case ICEBERG:
                     def icebergHandler = it as IcebergHandler
-                    return icebergHandler.catalogHandlers
+                    icebergHandler.catalogHandlers
                             .asMap
                             .values()
                             .collectMany { catalogHandler ->
                                 catalogHandler.schemaHandlers.asMap.values()
                             }
-                            .collect {
+                            .each {
                                 def clazz = ReflectionUtils.loadClass(it.schemaName.get(), classpaths)
                                 def schema = getSchema(clazz)
                                 def (db, table) = it.table.get().split("\\.")
 
-                                return MigrationScriptGenerator.builder()
+                                def generator = MigrationScriptGenerator.builder()
                                         .scriptDir(Paths.get(scriptDir.get().asFile.toString()))
                                         .tableIdentifier(TableIdentifier.of(db, table))
                                         .avroSchema(schema)
                                         .ignoredColumns(it.ignoredColumns.get())
                                         .build()
+
+                                results << generator.generateMigration()
                             }
-                            .forEach {
-                                it.generateMigration()
-                            }
+                    break
                 default:
                     throw new IllegalArgumentException("Unsupported data format: ${it.dataFormatType}")
             }
         }
 
-//        // Serialize and save the task DTOs
-//        Path serializedPath = serializeAndSave(migrationScriptGeneratorTaskDtos)
-//
-//        // Combine the classpath files
-//        FileCollection combinedClasspath = classpaths.plus(project.files())
-//
-//        // Execute the Java process
-//        project.javaexec {
-//            classpath combinedClasspath
-//            mainClass = 'com.crevasse.plugin.executables.MigrationScriptGeneratorTaskMain'
-//            args serializedPath.toString()
-//        }
+        printResults(results)
     }
-//
-//    private Path serializeAndSave(List<MigrationScriptGeneratorTaskDto> migrationScriptGeneratorTaskDtos) {
-//        if (!serializedOutputFile.parent.toFile().exists()) {
-//            Files.createDirectories(serializedOutputFile.parent)
-//        }
-//        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(Files.newOutputStream(serializedOutputFile))) {
-//            objectOutputStream.writeObject(migrationScriptGeneratorTaskDtos)
-//        }
-//        return serializedOutputFile
-//    }
+
+    private void printResults(List<MigrationGenerationResult> results) {
+        def created = results.findAll { it.status == MigrationGenerationResult.Status.CREATED }
+        def skipped = results.findAll { it.status == MigrationGenerationResult.Status.SKIPPED_NO_CHANGES }
+
+        println ""
+
+        // Print created migrations
+        created.each { result ->
+            println "${GREEN}✔${RESET} ${BOLD}${result.database}.${result.table}${RESET}"
+            println "  ${DIM}Created:${RESET} migration_${result.stepNumber}.groovy"
+            println "  ${DIM}Path:${RESET}    ${result.scriptPath}"
+            if (result.operations) {
+                println "  ${DIM}Changes:${RESET}"
+                result.operations.each { op ->
+                    println "    ${CYAN}•${RESET} ${op}"
+                }
+            }
+            println ""
+        }
+
+        // Print skipped tables
+        skipped.each { result ->
+            println "${YELLOW}○${RESET} ${BOLD}${result.database}.${result.table}${RESET} ${DIM}(no changes)${RESET}"
+        }
+
+        // Print summary
+        println ""
+        println "${DIM}${'─' * 50}${RESET}"
+        if (created) {
+            println "${GREEN}${BOLD}${created.size()} migration(s) created${RESET}"
+        } else {
+            println "${YELLOW}No migrations created - schemas are up to date${RESET}"
+        }
+        println ""
+    }
 }
