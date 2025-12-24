@@ -10,6 +10,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 
 import static com.crevasse.plugin.extension.DataFormatHandler.DataFormatType.ICEBERG
@@ -26,6 +27,7 @@ class MigrationExecutorTask extends DefaultTask {
     private static final String DIM = "\u001B[2m"
 
     @InputDirectory
+    @Optional
     final DirectoryProperty scriptDir = project.objects.directoryProperty()
 
     @Input
@@ -36,6 +38,21 @@ class MigrationExecutorTask extends DefaultTask {
         println ""
         println "${BOLD}${CYAN}Crevasse Migration Executor${RESET}"
         println "${DIM}${'─' * 50}${RESET}"
+
+        def scriptDirFile = scriptDir.get().asFile
+        if (!scriptDirFile.exists()) {
+            println ""
+            println "${YELLOW}⚠${RESET}  ${BOLD}No migrations directory found${RESET}"
+            println "   ${DIM}Expected:${RESET} ${scriptDirFile.absolutePath}"
+            println ""
+            println "   Run ${CYAN}./gradlew generateMigrationScripts${RESET} to create migrations"
+            println "   from your Avro schemas first."
+            println ""
+            println "${DIM}${'─' * 50}${RESET}"
+            println "${YELLOW}No migrations to apply${RESET}"
+            println ""
+            return
+        }
 
         def results = []
 

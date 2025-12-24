@@ -3,6 +3,7 @@ protocol MySchema1 {
 	record MyRecord1 {
 		string name;
 		int age;
+		string email;
 		time_ms? timestamp;
 	}
 }
