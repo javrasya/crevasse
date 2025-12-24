@@ -49,7 +49,7 @@ pluginManagement {
 
 ```groovy
 plugins {
-    id 'com.crevasse.plugin' version 'v0.1.3'
+    id 'com.crevasse.plugin' version 'v0.1.4'
 }
 ```
 
@@ -62,7 +62,7 @@ plugins {
 
 **That's it!** Your Iceberg table is created with the schema from your Avro definition.
 
-> **Tip:** Use a specific version tag (e.g., `v0.1.3`) for reproducible builds.
+> **Tip:** Use a specific version tag (e.g., `v0.1.4`) for reproducible builds.
 
 ---
 
@@ -261,7 +261,7 @@ pluginManagement {
 plugins {
     id 'java'
     id 'com.github.davidmc24.gradle.plugin.avro' version '1.9.1'
-    id 'com.crevasse.plugin' version 'v0.1.3'
+    id 'com.crevasse.plugin' version 'v0.1.4'
 }
 
 repositories {
@@ -275,7 +275,7 @@ dependencies {
 ```
 
 > **Version options:**
-> - `v0.1.3` - Specific release version (recommended)
+> - `v0.1.4` - Specific release version (recommended)
 > - `main-SNAPSHOT` - Latest from main branch (bleeding edge)
 > - `<commit-hash>` - Specific commit (e.g., `525697c`)
 

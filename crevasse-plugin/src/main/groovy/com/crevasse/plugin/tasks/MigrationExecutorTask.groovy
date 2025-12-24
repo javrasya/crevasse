@@ -9,8 +9,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 
 import static com.crevasse.plugin.extension.DataFormatHandler.DataFormatType.ICEBERG
@@ -26,8 +25,7 @@ class MigrationExecutorTask extends DefaultTask {
     private static final String BOLD = "\u001B[1m"
     private static final String DIM = "\u001B[2m"
 
-    @InputDirectory
-    @Optional
+    @Internal
     final DirectoryProperty scriptDir = project.objects.directoryProperty()
 
     @Input

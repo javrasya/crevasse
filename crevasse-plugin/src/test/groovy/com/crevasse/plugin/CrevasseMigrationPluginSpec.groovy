@@ -202,6 +202,39 @@ class CrevasseMigrationPluginSpec extends Specification {
         table1.schema().columns().get(1).name() == "age"
     }
 
+    def "should handle missing migrations directory gracefully"() {
+        given:
+        def nonExistentScriptPath = new File(testProjectRootDir, "non_existent_migrations")
+
+        buildFile << """
+            crevasse {
+                scriptDir = file("${nonExistentScriptPath.toPath().toString()}")
+                iceberg {
+                    catalogs {
+                        hadoop {
+                            name "productionCatalog1"
+                            warehouse "file://${icebergWarehouse1.toString()}"
+                            schemas {
+                                mySchema1 {
+                                    table "my_db.my_table1"
+                                    schemaName "com.crevasse.MyRecord1"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        """
+
+        when: "the task runs to apply migrations with non-existent directory"
+        def result = run("applyMigrations")
+
+        then: "the build succeeds with a warning message"
+        result.output.contains("BUILD SUCCESSFUL")
+        result.output.contains("No migrations directory found")
+        result.output.contains("generateMigrationScripts")
+    }
+
     protected BuildResult run(String... args = ["clean", "build", "-x", "test"]) {
         return createGradleRunner().withArguments(determineGradleArguments(args)).build()
     }
