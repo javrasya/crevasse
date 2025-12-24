@@ -14,6 +14,7 @@ Write your migrations once, apply them to Apache Iceberg today, and to Hudi or D
 - **Manual Migration Support**: Write custom migrations using the expressive Groovy DSL
 - **Versioned Migrations**: Track applied migrations in table metadata, similar to Django
 - **Immutable History**: Once applied, migrations form an immutable history of your table's evolution
+- **IDE-Friendly**: Full autocompletion, navigation, and refactoring support in IntelliJ IDEA and other Groovy-aware IDEs
 
 ---
 
@@ -21,6 +22,7 @@ Write your migrations once, apply them to Apache Iceberg today, and to Hudi or D
 
 - [Architecture](#architecture)
 - [Supported Table Formats](#supported-table-formats)
+- [IDE Support & Developer Experience](#ide-support--developer-experience)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Schema Representation with Avro](#schema-representation-with-avro)
@@ -104,6 +106,68 @@ Crevasse provides full support for Apache Iceberg, including:
 | Nessie | Planned |
 | JDBC Catalog | Planned |
 | REST Catalog | Planned |
+
+---
+
+## IDE Support & Developer Experience
+
+One of the key advantages of using **Groovy** for migration scripts is the exceptional IDE support. Unlike YAML, JSON, or custom DSL formats, Groovy is a first-class language in major IDEs.
+
+### IntelliJ IDEA Integration
+
+When you open a migration script in IntelliJ IDEA (with the Groovy plugin), you get:
+
+| Feature | Description |
+|---------|-------------|
+| **Autocompletion** | Full code completion for all DSL methods (`addColumns`, `stringCol`, `structCol`, etc.) |
+| **Type Checking** | Real-time error detection for invalid method calls or wrong parameter types |
+| **Navigate to Source** | Ctrl+Click on any DSL method to jump directly to its implementation |
+| **Parameter Hints** | See method signatures and parameter names as you type |
+| **Refactoring** | Rename columns, extract variables, and other refactoring operations |
+| **Syntax Highlighting** | Full Groovy syntax highlighting with semantic coloring |
+| **Documentation** | Hover over methods to see Javadoc documentation |
+
+### Why Groovy?
+
+```groovy
+// Migration scripts are real Groovy code, not templates or config files
+migrate {
+    step 1
+    description "Add user profile"
+
+    // IDE knows these methods, their parameters, and return types
+    addColumns {
+        stringCol('username', false)     // ← Autocomplete suggests: stringCol, intCol, structCol...
+        structCol('profile', true) {     // ← IDE shows: (name: String, optional: boolean, closure)
+            stringCol('bio', true)
+            listCol('tags', true, stringType())
+        }
+    }
+}
+```
+
+**Benefits over configuration-based approaches:**
+
+| Approach | Autocompletion | Type Safety | Navigation | Refactoring |
+|----------|----------------|-------------|------------|-------------|
+| **Crevasse (Groovy)** | Full | Full | Full | Full |
+| YAML/JSON configs | Limited | None | None | None |
+| Custom DSL files | None | None | None | None |
+| SQL scripts | Partial | None | None | None |
+
+### Setup for Best Experience
+
+To get full IDE support, ensure your migration folder is configured as a source directory:
+
+```groovy
+// build.gradle - migrations folder is auto-configured as a source set
+crevasse {
+    scriptDir = file("./migrations")
+    // ...
+}
+```
+
+The Crevasse plugin automatically registers your migration directory as a Groovy source folder, enabling full IDE integration without additional configuration.
 
 ---
 
