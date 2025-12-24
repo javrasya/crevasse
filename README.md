@@ -1,6 +1,7 @@
 ![crevasse-logo.png](asssets/crevasse-logo.png)
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![JitPack](https://jitpack.io/v/javrasya/crevasse.svg)](https://jitpack.io/#javrasya/crevasse)
 [![Java](https://img.shields.io/badge/Java-11%2B-orange.svg)](https://openjdk.org/)
 [![Gradle](https://img.shields.io/badge/Gradle-9.x-green.svg)](https://gradle.org/)
 [![Iceberg](https://img.shields.io/badge/Apache%20Iceberg-1.5.x-blueviolet.svg)](https://iceberg.apache.org/)
@@ -39,21 +40,42 @@ Crevasse is a **table-format agnostic** schema migration framework for modern la
 
 ## Get Started in 60 Seconds
 
-```bash
-# 1️⃣ Add to build.gradle
-plugins {
-    id 'com.crevasse.plugin' version '1.0-SNAPSHOT'
+**1. Add JitPack repository and plugin to `settings.gradle`:**
+
+```groovy
+pluginManagement {
+    repositories {
+        maven { url 'https://jitpack.io' }
+        gradlePluginPortal()
+    }
+    resolutionStrategy {
+        eachPlugin {
+            if (requested.id.id == 'com.crevasse.plugin') {
+                useModule("com.github.javrasya.crevasse:crevasse-plugin:${requested.version}")
+            }
+        }
+    }
 }
+```
 
-# 2️⃣ Define your schema (src/main/avro/user.avdl)
-# @namespace("com.example")
-# record User { string id; string name; }
+**2. Apply the plugin in `build.gradle`:**
 
-# 3️⃣ Generate and apply migrations
+```groovy
+plugins {
+    id 'com.crevasse.plugin' version 'main-SNAPSHOT'
+}
+```
+
+**3. Define your schema, generate and apply:**
+
+```bash
+# Create src/main/avro/user.avdl with your schema
 ./gradlew generateMigrationScripts applyMigrations
 ```
 
 **That's it!** Your Iceberg table is created with the schema from your Avro definition.
+
+> **Tip:** Replace `main-SNAPSHOT` with a specific commit hash or tag for reproducible builds.
 
 ---
 
@@ -225,17 +247,39 @@ Crevasse operates similarly to Django migrations:
 
 ## Installation
 
-Add the Crevasse plugin to your `build.gradle`:
+### Using JitPack (Recommended)
+
+JitPack builds the plugin directly from GitHub. No manual installation required.
+
+**1. Configure `settings.gradle`:**
+
+```groovy
+pluginManagement {
+    repositories {
+        maven { url 'https://jitpack.io' }
+        gradlePluginPortal()
+    }
+    resolutionStrategy {
+        eachPlugin {
+            if (requested.id.id == 'com.crevasse.plugin') {
+                useModule("com.github.javrasya.crevasse:crevasse-plugin:${requested.version}")
+            }
+        }
+    }
+}
+```
+
+**2. Configure `build.gradle`:**
 
 ```groovy
 plugins {
     id 'java'
     id 'com.github.davidmc24.gradle.plugin.avro' version '1.9.1'
-    id 'com.crevasse.plugin' version '1.0-SNAPSHOT'
+    id 'com.crevasse.plugin' version 'main-SNAPSHOT'
 }
 
 repositories {
-    mavenLocal()
+    maven { url 'https://jitpack.io' }
     mavenCentral()
 }
 
@@ -243,6 +287,23 @@ dependencies {
     implementation 'org.apache.avro:avro:1.11.1'
 }
 ```
+
+> **Version options:**
+> - `main-SNAPSHOT` - Latest from main branch
+> - `<commit-hash>` - Specific commit (e.g., `45d038d`)
+> - `<tag>` - Release tag (when available)
+
+### Building from Source
+
+Alternatively, clone and install locally:
+
+```bash
+git clone https://github.com/javrasya/crevasse.git
+cd crevasse
+./gradlew publishToMavenLocal
+```
+
+Then use `mavenLocal()` in your repositories and version `1.0-SNAPSHOT`.
 
 ---
 
