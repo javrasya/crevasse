@@ -40,8 +40,12 @@ class CrevasseMigrationPluginSpec extends Specification {
         final Path crevasseRootPath = Paths.get("./").normalize().toAbsolutePath().parent;
 
         settingsFile << """
+        plugins {
+            id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+        }
+
         rootProject.name = 'test-project'
-        
+
         includeBuild("${crevasseRootPath.toString()}/")  {
             dependencySubstitution {
                 substitute module("com.crevasse:crevasse-iceberg") using project(":crevasse-iceberg")
@@ -59,15 +63,22 @@ class CrevasseMigrationPluginSpec extends Specification {
                 id "com.github.davidmc24.gradle.plugin.avro" version "1.9.1"
                 id 'com.crevasse.plugin'
             }
-            
+
             repositories { mavenCentral() }
-            
+
             apply plugin: "com.github.davidmc24.gradle.plugin.avro"
 
-            sourceSets.main.java.srcDir new File(buildDir, 'generated-main-avro-java')
-            sourceSets.test.java.srcDir new File(buildDir, 'generated-test-avro-java')
-            
+            java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+
+            sourceSets.main.java.srcDir layout.buildDirectory.dir('generated-main-avro-java')
+            sourceSets.test.java.srcDir layout.buildDirectory.dir('generated-test-avro-java')
+
             dependencies {
+                implementation 'org.apache.avro:avro:1.11.1'
             }
         """
 
@@ -208,7 +219,6 @@ class CrevasseMigrationPluginSpec extends Specification {
                 .withGradleVersion(gradleVersion.version)
                 .withPluginClasspath()
                 .forwardOutput()
-                .withDebug(true)
     }
 
     protected File projectFile(String path) {

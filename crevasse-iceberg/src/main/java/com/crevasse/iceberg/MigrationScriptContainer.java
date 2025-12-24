@@ -95,7 +95,7 @@ public class MigrationScriptContainer implements Serializable {
     final Binding binding = new Binding();
     binding.setVariable("step", migrationStep);
     script.setBinding(binding);
-    script.invokeMethod("execute", null);
+    script.execute();
   }
 
   private static MigrationBaseScript getScript(String code) {

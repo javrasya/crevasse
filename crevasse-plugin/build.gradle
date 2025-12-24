@@ -5,9 +5,9 @@ plugins {
 dependencies {
     implementation gradleApi()
     implementation localGroovy()
-    api project(":crevasse-iceberg")
-
-    api libs.groovy.all
+    api(project(":crevasse-iceberg")) {
+        exclude group: 'org.apache.groovy'
+    }
 
     compileOnly libs.lombok
     annotationProcessor libs.lombok
@@ -15,8 +15,8 @@ dependencies {
     testAnnotationProcessor libs.lombok
 
     testImplementation gradleTestKit()
-    testImplementation libs.groovy.all
-    testImplementation libs.spock.core
+    testImplementation libs.spock.core.groovy4
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 gradlePlugin {

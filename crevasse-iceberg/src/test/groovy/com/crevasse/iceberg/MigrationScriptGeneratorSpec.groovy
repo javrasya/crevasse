@@ -37,10 +37,13 @@ class MigrationScriptGeneratorSpec extends Specification {
 
         then:
 
-        def migrationScriptContainers = tempFolder.listFiles()
-        migrationScriptContainers.size() == 1
+        def namespaceFolders = tempFolder.listFiles()
+        namespaceFolders.size() == 1
 
-        def generatedMigrationScriptFiles = migrationScriptContainers[0].listFiles()
+        def tableFolders = namespaceFolders[0].listFiles()
+        tableFolders.size() == 1
+
+        def generatedMigrationScriptFiles = tableFolders[0].listFiles()
         generatedMigrationScriptFiles.size() == 1
 
         def firstMigrationScript = generatedMigrationScriptFiles[0]
@@ -106,10 +109,13 @@ class MigrationScriptGeneratorSpec extends Specification {
         migrationScriptGenerator.generateMigration()
 
         then:
-        def migrationScriptContainers = tempFolder.listFiles()
-        migrationScriptContainers.size() == 1
+        def namespaceFolders = tempFolder.listFiles()
+        namespaceFolders.size() == 1
 
-        def generatedMigrationScriptFiles = migrationScriptContainers[0].listFiles()
+        def tableFolders = namespaceFolders[0].listFiles()
+        tableFolders.size() == 1
+
+        def generatedMigrationScriptFiles = tableFolders[0].listFiles()
         generatedMigrationScriptFiles.size() == 1
 
         def firstMigrationScript = generatedMigrationScriptFiles[0]
@@ -119,10 +125,13 @@ class MigrationScriptGeneratorSpec extends Specification {
         migrationScriptGenerator2.generateMigration()
 
         then:
-        def migrationScriptContainers2 = tempFolder.listFiles()
-        migrationScriptContainers2.size() == 1
+        def namespaceFolders2 = tempFolder.listFiles()
+        namespaceFolders2.size() == 1
 
-        def generatedMigrationScriptFiles2 = migrationScriptContainers2[0].listFiles().sort { it.name }
+        def tableFolders2 = namespaceFolders2[0].listFiles()
+        tableFolders2.size() == 1
+
+        def generatedMigrationScriptFiles2 = tableFolders2[0].listFiles().sort { it.name }
         generatedMigrationScriptFiles2.size() == 2
 
         def secondMigrationScript = generatedMigrationScriptFiles2[1]
@@ -172,10 +181,13 @@ class MigrationScriptGeneratorSpec extends Specification {
         migrationScriptGenerator.generateMigration()
 
         then:
-        def migrationScriptContainers = tempFolder.listFiles()
-        migrationScriptContainers.size() == 1
+        def namespaceFolders = tempFolder.listFiles()
+        namespaceFolders.size() == 1
 
-        def generatedMigrationScriptFiles = migrationScriptContainers[0].listFiles()
+        def tableFolders = namespaceFolders[0].listFiles()
+        tableFolders.size() == 1
+
+        def generatedMigrationScriptFiles = tableFolders[0].listFiles()
         generatedMigrationScriptFiles.size() == 1
 
         def firstMigrationScript = generatedMigrationScriptFiles[0]
@@ -185,10 +197,13 @@ class MigrationScriptGeneratorSpec extends Specification {
         migrationScriptGenerator2.generateMigration()
 
         then:
-        def migrationScriptContainers2 = tempFolder.listFiles()
-        migrationScriptContainers2.size() == 1
+        def namespaceFolders2 = tempFolder.listFiles()
+        namespaceFolders2.size() == 1
 
-        def generatedMigrationScriptFiles2 = migrationScriptContainers2[0].listFiles().sort { it.name }
+        def tableFolders2 = namespaceFolders2[0].listFiles()
+        tableFolders2.size() == 1
+
+        def generatedMigrationScriptFiles2 = tableFolders2[0].listFiles().sort { it.name }
         generatedMigrationScriptFiles2.size() == 2
 
         def secondMigrationScript = generatedMigrationScriptFiles2[1]
@@ -238,10 +253,13 @@ class MigrationScriptGeneratorSpec extends Specification {
         migrationScriptGenerator.generateMigration()
 
         then:
-        def migrationScriptContainers = tempFolder.listFiles()
-        migrationScriptContainers.size() == 1
+        def namespaceFolders = tempFolder.listFiles()
+        namespaceFolders.size() == 1
 
-        def generatedMigrationScriptFiles = migrationScriptContainers[0].listFiles()
+        def tableFolders = namespaceFolders[0].listFiles()
+        tableFolders.size() == 1
+
+        def generatedMigrationScriptFiles = tableFolders[0].listFiles()
         generatedMigrationScriptFiles.size() == 1
 
         def firstMigrationScript = generatedMigrationScriptFiles[0]
@@ -251,10 +269,13 @@ class MigrationScriptGeneratorSpec extends Specification {
         migrationScriptGenerator2.generateMigration()
 
         then:
-        def migrationScriptContainers2 = tempFolder.listFiles()
-        migrationScriptContainers2.size() == 1
+        def namespaceFolders2 = tempFolder.listFiles()
+        namespaceFolders2.size() == 1
 
-        def generatedMigrationScriptFiles2 = migrationScriptContainers2[0].listFiles().sort { it.name }
+        def tableFolders2 = namespaceFolders2[0].listFiles()
+        tableFolders2.size() == 1
+
+        def generatedMigrationScriptFiles2 = tableFolders2[0].listFiles().sort { it.name }
         generatedMigrationScriptFiles2.size() == 2
 
         def secondMigrationScript = generatedMigrationScriptFiles2[1]
@@ -302,10 +323,13 @@ class MigrationScriptGeneratorSpec extends Specification {
         migrationScriptGenerator.generateMigration()
 
         then:
-        def migrationScriptContainers = tempFolder.listFiles()
-        migrationScriptContainers.size() == 1
+        def namespaceFolders = tempFolder.listFiles()
+        namespaceFolders.size() == 1
 
-        def generatedMigrationScriptFiles = migrationScriptContainers[0].listFiles()
+        def tableFolders = namespaceFolders[0].listFiles()
+        tableFolders.size() == 1
+
+        def generatedMigrationScriptFiles = tableFolders[0].listFiles()
         generatedMigrationScriptFiles.size() == 1
 
         def firstMigrationScript = generatedMigrationScriptFiles[0]
@@ -315,10 +339,13 @@ class MigrationScriptGeneratorSpec extends Specification {
         migrationScriptGenerator2.generateMigration()
 
         then:
-        def migrationScriptContainers2 = tempFolder.listFiles()
-        migrationScriptContainers2.size() == 1
+        def namespaceFolders2 = tempFolder.listFiles()
+        namespaceFolders2.size() == 1
 
-        def generatedMigrationScriptFiles2 = migrationScriptContainers2[0].listFiles().sort { it.name }
+        def tableFolders2 = namespaceFolders2[0].listFiles()
+        tableFolders2.size() == 1
+
+        def generatedMigrationScriptFiles2 = tableFolders2[0].listFiles().sort { it.name }
         generatedMigrationScriptFiles2.size() == 2
 
         def secondMigrationScript = generatedMigrationScriptFiles2[1]
@@ -366,10 +393,13 @@ class MigrationScriptGeneratorSpec extends Specification {
         migrationScriptGenerator.generateMigration()
 
         then:
-        def migrationScriptContainers = tempFolder.listFiles()
-        migrationScriptContainers.size() == 1
+        def namespaceFolders = tempFolder.listFiles()
+        namespaceFolders.size() == 1
 
-        def generatedMigrationScriptFiles = migrationScriptContainers[0].listFiles()
+        def tableFolders = namespaceFolders[0].listFiles()
+        tableFolders.size() == 1
+
+        def generatedMigrationScriptFiles = tableFolders[0].listFiles()
         generatedMigrationScriptFiles.size() == 1
 
         def firstMigrationScript = generatedMigrationScriptFiles[0]
@@ -379,10 +409,13 @@ class MigrationScriptGeneratorSpec extends Specification {
         migrationScriptGenerator2.generateMigration()
 
         then:
-        def migrationScriptContainers2 = tempFolder.listFiles()
-        migrationScriptContainers2.size() == 1
+        def namespaceFolders2 = tempFolder.listFiles()
+        namespaceFolders2.size() == 1
 
-        def generatedMigrationScriptFiles2 = migrationScriptContainers2[0].listFiles().sort { it.name }
+        def tableFolders2 = namespaceFolders2[0].listFiles()
+        tableFolders2.size() == 1
+
+        def generatedMigrationScriptFiles2 = tableFolders2[0].listFiles().sort { it.name }
         generatedMigrationScriptFiles2.size() == 2
 
         def secondMigrationScript = generatedMigrationScriptFiles2[1]

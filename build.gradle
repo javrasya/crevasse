@@ -4,7 +4,7 @@ plugins {
     id 'idea'
     id 'maven-publish'
     id "com.github.davidmc24.gradle.plugin.avro" version "1.9.1"
-    id 'com.adarshr.test-logger' version '3.2.0'
+    id 'com.adarshr.test-logger' version '4.0.0'
     id 'project-report'
 }
 
@@ -35,49 +35,79 @@ subprojects {
         mavenCentral()
     }
 
-    sourceCompatibility = '1.8'
-    targetCompatibility = '1.8'
+    java {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
 
-    if (JavaVersion.current() == JavaVersion.VERSION_17) {
-        ext.jdkVersion = '17'
+    def jvmOpenArgs = [
+            "-XX:+IgnoreUnrecognizedVMOptions",
+            "--add-opens", "java.base/java.io=ALL-UNNAMED",
+            "--add-opens", "java.base/java.lang.invoke=ALL-UNNAMED",
+            "--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED",
+            "--add-opens", "java.base/java.lang=ALL-UNNAMED",
+            "--add-opens", "java.base/java.math=ALL-UNNAMED",
+            "--add-opens", "java.base/java.net=ALL-UNNAMED",
+            "--add-opens", "java.base/java.nio=ALL-UNNAMED",
+            "--add-opens", "java.base/java.text=ALL-UNNAMED",
+            "--add-opens", "java.base/java.time=ALL-UNNAMED",
+            "--add-opens", "java.base/java.util.concurrent.atomic=ALL-UNNAMED",
+            "--add-opens", "java.base/java.util.concurrent=ALL-UNNAMED",
+            "--add-opens", "java.base/java.util.regex=ALL-UNNAMED",
+            "--add-opens", "java.base/java.util=ALL-UNNAMED",
+            "--add-opens", "java.base/jdk.internal.ref=ALL-UNNAMED",
+            "--add-opens", "java.base/jdk.internal.reflect=ALL-UNNAMED",
+            "--add-opens", "java.sql/java.sql=ALL-UNNAMED",
+            "--add-opens", "java.base/sun.util.calendar=ALL-UNNAMED",
+            "--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED",
+            "--add-opens", "java.base/sun.nio.cs=ALL-UNNAMED",
+            "--add-opens", "java.base/sun.security.action=ALL-UNNAMED",
+            "--add-opens", "java.base/sun.util.calendar=ALL-UNNAMED",
+            "--add-opens", "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED",
+            "--add-opens", "jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED",
+            "--add-opens", "jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED",
+            "--add-opens", "jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED",
+            "--add-opens", "jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED",
+            "--add-opens", "jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED",
+            "--add-opens", "jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED",
+            "--add-opens", "jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
+            "--add-opens", "jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
+    ]
+
+    if (JavaVersion.current().majorVersion.toInteger() >= 17) {
+        tasks.withType(JavaCompile).configureEach {
+            options.fork = true
+            options.forkOptions.jvmArgs += jvmOpenArgs
+        }
         tasks.withType(Test).configureEach {
-            jvmArgs = jvmArgs + [
-                    "-XX:+IgnoreUnrecognizedVMOptions",
-                    "--add-opens", "java.base/java.io=ALL-UNNAMED",
-                    "--add-opens", "java.base/java.lang.invoke=ALL-UNNAMED",
-                    "--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED",
-                    "--add-opens", "java.base/java.lang=ALL-UNNAMED",
-                    "--add-opens", "java.base/java.math=ALL-UNNAMED",
-                    "--add-opens", "java.base/java.net=ALL-UNNAMED",
-                    "--add-opens", "java.base/java.nio=ALL-UNNAMED",
-                    "--add-opens", "java.base/java.text=ALL-UNNAMED",
-                    "--add-opens", "java.base/java.time=ALL-UNNAMED",
-                    "--add-opens", "java.base/java.util.concurrent.atomic=ALL-UNNAMED",
-                    "--add-opens", "java.base/java.util.concurrent=ALL-UNNAMED",
-                    "--add-opens", "java.base/java.util.regex=ALL-UNNAMED",
-                    "--add-opens", "java.base/java.util=ALL-UNNAMED",
-                    "--add-opens", "java.base/jdk.internal.ref=ALL-UNNAMED",
-                    "--add-opens", "java.base/jdk.internal.reflect=ALL-UNNAMED",
-                    "--add-opens", "java.sql/java.sql=ALL-UNNAMED",
-                    "--add-opens", "java.base/sun.util.calendar=ALL-UNNAMED",
-                    "--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED",
-                    "--add-opens", "java.base/sun.nio.cs=ALL-UNNAMED",
-                    "--add-opens", "java.base/sun.security.action=ALL-UNNAMED",
-                    "--add-opens", "java.base/sun.util.calendar=ALL-UNNAMED"
-            ]
+            jvmArgs = jvmArgs + jvmOpenArgs
         }
     }
 
     test {
         useJUnitPlatform()
-        testLogging {
-            events "passed", "skipped", "failed"
-        }
+        outputs.upToDateWhen { false } // Always run tests
+    }
+
+    testlogger {
+        theme 'mocha'
+        showStandardStreams false
+        showPassedStandardStreams false
+        showSkippedStandardStreams false
+        showFailedStandardStreams true
     }
 }
 
 javadoc {
-    destinationDir = file("${buildDir}/docs/javadoc")
+    destinationDir = layout.buildDirectory.dir("docs/javadoc").get().asFile
+}
+
+// Make root 'test' task run all subproject tests
+tasks.named('test') {
+    dependsOn subprojects.collect { it.tasks.matching { task -> task.name == 'test' } }
 }
 
 def exportedProjects = [

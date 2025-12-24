@@ -1,13 +1,17 @@
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+}
+
 rootProject.name = 'crevasse'
 
 include 'crevasse-plugin'
 include 'crevasse-iceberg'
 include 'crevasse-bundled'
 
-def groovyVersion = "3.0.15"
+def groovyVersion = "5.0.3"
 def icebergVersion = "1.5.1"
 def hadoopVersion = "3.2.0"
-def lombokVersion = '1.18.24'
+def lombokVersion = '1.18.42'
 def guavaVersion = '33.1.0-jre'
 
 dependencyResolutionManagement {
@@ -23,12 +27,11 @@ dependencyResolutionManagement {
             library("hadoop-common", "org.apache.hadoop:hadoop-common:${hadoopVersion}")
             library("hadoop-client", "org.apache.hadoop:hadoop-client:${hadoopVersion}")
             library("jinjava", "com.hubspot.jinjava:jinjava:2.7.1")
-            library("groovy-all", "org.codehaus.groovy:groovy-all:${groovyVersion}")
-            library("spock-core", "org.spockframework:spock-core:2.3-groovy-3.0")
+            library("groovy-all", "org.apache.groovy:groovy-all:${groovyVersion}")
+            library("spock-core", "org.spockframework:spock-core:2.4-groovy-5.0")
+            library("spock-core-groovy4", "org.spockframework:spock-core:2.4-groovy-4.0")
             library("lombok", "org.projectlombok:lombok:${lombokVersion}")
             library("guava", "com.google.guava:guava:${guavaVersion}")
         }
     }
 }
-include 'crevasse-plugin-library'
-
