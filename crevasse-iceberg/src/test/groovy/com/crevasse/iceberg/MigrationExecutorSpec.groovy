@@ -34,8 +34,8 @@ class MigrationExecutorSpec extends Specification {
                                 * Add column 'name'
                             """
                             addColumns {
-                                stringCol('id', false)
-                                stringCol('name', true)
+                                stringCol('id').notNullable()
+                                stringCol('name')
                             }
                         }
                 ]
@@ -72,38 +72,38 @@ class MigrationExecutorSpec extends Specification {
                         migrate {
                             step 0
                             description """
-                                * Add all column types 
+                                * Add all column types
                             """
                             addColumns {
-                                stringCol('stringCol', false)
-                                intCol('integerCol', false)
-                                longCol('longCol', false)
-                                floatCol('floatCol', false)
-                                doubleCol('doubleCol', false)
-                                boolCol('booleanCol', false)
-                                dateCol('dateCol', false)
-                                timestampCol('timestampCol', false)
-                                decimalCol('decimalCol', false, 10, 2)
-                                fixedCol('fixedCol', false, 10)
-                                binaryCol('binaryCol', false)
-                                structCol('structCol', false) {
-                                    stringCol('nestedStringCol', false)
+                                stringCol('stringCol').notNullable()
+                                intCol('integerCol').notNullable()
+                                longCol('longCol').notNullable()
+                                floatCol('floatCol').notNullable()
+                                doubleCol('doubleCol').notNullable()
+                                boolCol('booleanCol').notNullable()
+                                dateCol('dateCol').notNullable()
+                                timestampCol('timestampCol').notNullable()
+                                decimalCol('decimalCol', 10, 2).notNullable()
+                                fixedCol('fixedCol', 10).notNullable()
+                                binaryCol('binaryCol').notNullable()
+                                structCol('structCol').notNullable {
+                                    stringCol('nestedStringCol').notNullable()
                                 }
-                                listCol('listCol', false, stringType())
-                                listCol('listColWithStructType', false, structType {
-                                    stringCol('nestedStringCol', false)
-                                })
-                                mapCol('mapCol', false) {
+                                listCol('listCol', stringType()).notNullable()
+                                listCol('listColWithStructType', structType {
+                                    stringCol('nestedStringCol').notNullable()
+                                }).notNullable()
+                                mapCol('mapCol').notNullable {
                                     key(stringType())
                                     value(intType())
                                 }
-                                mapCol('mapColWithStructType', false) {
+                                mapCol('mapColWithStructType').notNullable {
                                     key(stringType())
                                     value(structType {
-                                        stringCol('nestedStringCol', false)
+                                        stringCol('nestedStringCol').notNullable()
                                     })
                                 }
-                                timestampWithZoneCol('timestampWithZoneCol', false)
+                                timestampWithZoneCol('timestampWithZoneCol').notNullable()
                             }
                         }
                 ]
@@ -210,6 +210,80 @@ class MigrationExecutorSpec extends Specification {
         columns.get(16).type().typeId() == Type.TypeID.TIMESTAMP
         columns.get(16).isRequired()
         ((Types.TimestampType) columns.get(16).type()).shouldAdjustToUTC()
+    }
+
+    def "should support default nullable columns"() {
+        given:
+        def catalog = getHadoopCatalog()
+        def tableIdentifier = TableIdentifier.of("testdb", "testtable")
+        def migrationExecutor = getMigrationExecutor(
+                catalog,
+                tableIdentifier,
+                [
+                        migrate {
+                            step 0
+                            description "Test default nullable"
+                            addColumns {
+                                stringCol('id').notNullable()
+                                stringCol('optional_field')  // Should be nullable by default
+                                stringCol('explicit_nullable').nullable()  // Explicitly nullable
+                            }
+                        }
+                ]
+        )
+
+        when:
+        migrationExecutor.run()
+
+        then:
+        def table = catalog.loadTable(tableIdentifier)
+        def columns = table.schema().columns().toSorted { it.fieldId() }
+
+        columns.size() == 3
+
+        columns.get(0).name() == "id"
+        columns.get(0).isRequired()
+
+        columns.get(1).name() == "optional_field"
+        !columns.get(1).isRequired()
+
+        columns.get(2).name() == "explicit_nullable"
+        !columns.get(2).isRequired()
+    }
+
+    def "should support doc() method for column documentation"() {
+        given:
+        def catalog = getHadoopCatalog()
+        def tableIdentifier = TableIdentifier.of("testdb", "testtable")
+        def migrationExecutor = getMigrationExecutor(
+                catalog,
+                tableIdentifier,
+                [
+                        migrate {
+                            step 0
+                            description "Test column documentation"
+                            addColumns {
+                                stringCol('id').notNullable().doc('Primary identifier')
+                                stringCol('email').doc('User email address')
+                            }
+                        }
+                ]
+        )
+
+        when:
+        migrationExecutor.run()
+
+        then:
+        def table = catalog.loadTable(tableIdentifier)
+        def columns = table.schema().columns().toSorted { it.fieldId() }
+
+        columns.size() == 2
+
+        columns.get(0).name() == "id"
+        columns.get(0).doc() == 'Primary identifier'
+
+        columns.get(1).name() == "email"
+        columns.get(1).doc() == 'User email address'
     }
 
     def getMigrationExecutor(

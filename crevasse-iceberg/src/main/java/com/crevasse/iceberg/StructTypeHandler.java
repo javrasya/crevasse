@@ -1,196 +1,142 @@
 package com.crevasse.iceberg;
 
 import com.crevasse.iceberg.schema.*;
-import groovy.lang.Closure;
-import groovy.lang.DelegatesTo;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.ToString;
 import org.apache.iceberg.types.Types;
 
+/**
+ * Handler for struct type definitions in the migration DSL.
+ * Provides fluent column builder methods that return ColumnBuilder instances.
+ */
 @Getter
 @ToString
 public class StructTypeHandler implements WithColumnTypesUtilities {
-  private final List<Column> columns = new ArrayList<>();
+  private final List<ColumnBuilder> columnBuilders = new ArrayList<>();
 
-  public void stringCol(String name, boolean isOptional) {
-    this.stringCol(name, isOptional, null);
+  /**
+   * Get the built columns. This finalizes all builders.
+   *
+   * @return list of built Column objects
+   */
+  public List<Column> getColumns() {
+    return columnBuilders.stream().map(ColumnBuilder::build).collect(Collectors.toList());
   }
 
-  public void stringCol(String name, boolean isOptional, String doc) {
-    columns.add(new Column(name, new PrimitiveColumnType(Types.StringType.get()), isOptional, doc));
+  // === Primitive column methods - return builders ===
+
+  public PrimitiveColumnBuilder stringCol(String name) {
+    PrimitiveColumnBuilder builder = new PrimitiveColumnBuilder(name, Types.StringType.get());
+    columnBuilders.add(builder);
+    return builder;
   }
 
-  public void intCol(String name, boolean isOptional) {
-    this.intCol(name, isOptional, null);
+  public PrimitiveColumnBuilder intCol(String name) {
+    PrimitiveColumnBuilder builder = new PrimitiveColumnBuilder(name, Types.IntegerType.get());
+    columnBuilders.add(builder);
+    return builder;
   }
 
-  public void intCol(String name, boolean isOptional, String doc) {
-    columns.add(
-        new Column(name, new PrimitiveColumnType(Types.IntegerType.get()), isOptional, doc));
+  public PrimitiveColumnBuilder longCol(String name) {
+    PrimitiveColumnBuilder builder = new PrimitiveColumnBuilder(name, Types.LongType.get());
+    columnBuilders.add(builder);
+    return builder;
   }
 
-  public void longCol(String name, boolean isOptional) {
-    this.longCol(name, isOptional, null);
+  public PrimitiveColumnBuilder floatCol(String name) {
+    PrimitiveColumnBuilder builder = new PrimitiveColumnBuilder(name, Types.FloatType.get());
+    columnBuilders.add(builder);
+    return builder;
   }
 
-  public void longCol(String name, boolean isOptional, String doc) {
-    columns.add(new Column(name, new PrimitiveColumnType(Types.LongType.get()), isOptional, doc));
+  public PrimitiveColumnBuilder doubleCol(String name) {
+    PrimitiveColumnBuilder builder = new PrimitiveColumnBuilder(name, Types.DoubleType.get());
+    columnBuilders.add(builder);
+    return builder;
   }
 
-  public void floatCol(String name, boolean isOptional) {
-    this.floatCol(name, isOptional, null);
+  public PrimitiveColumnBuilder boolCol(String name) {
+    PrimitiveColumnBuilder builder = new PrimitiveColumnBuilder(name, Types.BooleanType.get());
+    columnBuilders.add(builder);
+    return builder;
   }
 
-  public void floatCol(String name, boolean isOptional, String doc) {
-    columns.add(new Column(name, new PrimitiveColumnType(Types.FloatType.get()), isOptional, doc));
+  public PrimitiveColumnBuilder dateCol(String name) {
+    PrimitiveColumnBuilder builder = new PrimitiveColumnBuilder(name, Types.DateType.get());
+    columnBuilders.add(builder);
+    return builder;
   }
 
-  public void doubleCol(String name, boolean isOptional) {
-    this.doubleCol(name, isOptional, null);
+  public PrimitiveColumnBuilder timestampCol(String name) {
+    PrimitiveColumnBuilder builder =
+        new PrimitiveColumnBuilder(name, Types.TimestampType.withoutZone());
+    columnBuilders.add(builder);
+    return builder;
   }
 
-  public void doubleCol(String name, boolean isOptional, String doc) {
-    columns.add(new Column(name, new PrimitiveColumnType(Types.DoubleType.get()), isOptional, doc));
+  public PrimitiveColumnBuilder timestampWithZoneCol(String name) {
+    PrimitiveColumnBuilder builder =
+        new PrimitiveColumnBuilder(name, Types.TimestampType.withZone());
+    columnBuilders.add(builder);
+    return builder;
   }
 
-  public void boolCol(String name, boolean isOptional) {
-    this.boolCol(name, isOptional, null);
+  public PrimitiveColumnBuilder timeCol(String name) {
+    PrimitiveColumnBuilder builder = new PrimitiveColumnBuilder(name, Types.TimeType.get());
+    columnBuilders.add(builder);
+    return builder;
   }
 
-  public void boolCol(String name, boolean isOptional, String doc) {
-    columns.add(
-        new Column(name, new PrimitiveColumnType(Types.BooleanType.get()), isOptional, doc));
+  public PrimitiveColumnBuilder binaryCol(String name) {
+    PrimitiveColumnBuilder builder = new PrimitiveColumnBuilder(name, Types.BinaryType.get());
+    columnBuilders.add(builder);
+    return builder;
   }
 
-  public void dateCol(String name, boolean isOptional) {
-    this.dateCol(name, isOptional, null);
+  public PrimitiveColumnBuilder uuidCol(String name) {
+    PrimitiveColumnBuilder builder = new PrimitiveColumnBuilder(name, Types.UUIDType.get());
+    columnBuilders.add(builder);
+    return builder;
   }
 
-  public void dateCol(String name, boolean isOptional, String doc) {
-    columns.add(new Column(name, new PrimitiveColumnType(Types.DateType.get()), isOptional, doc));
+  // === Parameterized primitive types ===
+
+  public DecimalColumnBuilder decimalCol(String name, int precision, int scale) {
+    DecimalColumnBuilder builder = new DecimalColumnBuilder(name, precision, scale);
+    columnBuilders.add(builder);
+    return builder;
   }
 
-  public void timestampCol(String name, boolean isOptional) {
-    this.timestampCol(name, isOptional, null);
+  public FixedColumnBuilder fixedCol(String name, int length) {
+    FixedColumnBuilder builder = new FixedColumnBuilder(name, length);
+    columnBuilders.add(builder);
+    return builder;
   }
 
-  public void timestampCol(String name, boolean isOptional, String doc) {
-    columns.add(
-        new Column(
-            name, new PrimitiveColumnType(Types.TimestampType.withoutZone()), isOptional, doc));
+  // === Complex types ===
+
+  public ListColumnBuilder listCol(String name, ColumnType elementType) {
+    ListColumnBuilder builder = new ListColumnBuilder(name, elementType);
+    columnBuilders.add(builder);
+    return builder;
   }
 
-  public void timestampWithZoneCol(String name, boolean isOptional) {
-    this.timestampWithZoneCol(name, isOptional, null);
+  public MapColumnBuilder mapCol(String name) {
+    MapColumnBuilder builder = new MapColumnBuilder(name);
+    columnBuilders.add(builder);
+    return builder;
   }
 
-  public void timestampWithZoneCol(String name, boolean isOptional, String doc) {
-    columns.add(
-        new Column(name, new PrimitiveColumnType(Types.TimestampType.withZone()), isOptional, doc));
+  public StructColumnBuilder structCol(String name) {
+    StructColumnBuilder builder = new StructColumnBuilder(name);
+    columnBuilders.add(builder);
+    return builder;
   }
 
-  public void timeCol(String name, boolean isOptional) {
-    this.timeCol(name, isOptional, null);
-  }
-
-  public void timeCol(String name, boolean isOptional, String doc) {
-    columns.add(new Column(name, new PrimitiveColumnType(Types.TimeType.get()), isOptional, doc));
-  }
-
-  public void decimalCol(String name, boolean isOptional, int precision, int scale) {
-    this.decimalCol(name, isOptional, precision, scale, null);
-  }
-
-  public void decimalCol(String name, boolean isOptional, int precision, int scale, String doc) {
-    columns.add(
-        new Column(
-            name,
-            new PrimitiveColumnType(Types.DecimalType.of(precision, scale)),
-            isOptional,
-            doc));
-  }
-
-  public void fixedCol(String name, boolean isOptional, int length) {
-    this.fixedCol(name, isOptional, length, null);
-  }
-
-  public void fixedCol(String name, boolean isOptional, int length, String doc) {
-    columns.add(
-        new Column(
-            name, new PrimitiveColumnType(Types.FixedType.ofLength(length)), isOptional, doc));
-  }
-
-  public void binaryCol(String name, boolean isOptional) {
-    this.binaryCol(name, isOptional, null);
-  }
-
-  public void binaryCol(String name, boolean isOptional, String doc) {
-    columns.add(new Column(name, new PrimitiveColumnType(Types.BinaryType.get()), isOptional, doc));
-  }
-
-  public void uuidCol(String name, boolean isOptional) {
-    this.uuidCol(name, isOptional, null);
-  }
-
-  public void uuidCol(String name, boolean isOptional, String doc) {
-    columns.add(new Column(name, new PrimitiveColumnType(Types.UUIDType.get()), isOptional, doc));
-  }
-
-  public void listCol(String name, boolean isOptional, ColumnType elementType) {
-    this.listCol(name, isOptional, null, elementType);
-  }
-
-  public void listCol(String name, boolean isOptional, String doc, ColumnType elementType) {
-    columns.add(new Column(name, new ListColumnType(elementType), isOptional, doc));
-  }
-
-  public void mapCol(
-      String name, boolean isOptional, @DelegatesTo(MapTypeHandler.class) Closure closure) {
-    this.mapCol(name, isOptional, null, closure);
-  }
-
-  public void mapCol(
-      String name,
-      boolean isOptional,
-      String doc,
-      @DelegatesTo(MapTypeHandler.class) Closure closure) {
-    MapTypeHandler mapTypeHandler = new MapTypeHandler();
-    closure.setDelegate(mapTypeHandler);
-    closure.setResolveStrategy(Closure.DELEGATE_ONLY);
-    closure.call();
-
-    columns.add(
-        new Column(
-            name,
-            new MapColumnType(mapTypeHandler.getKeyType(), mapTypeHandler.getValueType()),
-            isOptional,
-            doc));
-  }
-
-  public void structCol(
-      String name, boolean isOptional, @DelegatesTo(StructTypeHandler.class) Closure closure) {
-    this.structCol(name, isOptional, null, closure);
-  }
-
-  public void structCol(
-      String name,
-      boolean isOptional,
-      String doc,
-      @DelegatesTo(StructTypeHandler.class) Closure closure) {
-    StructTypeHandler structTypeHandler = new StructTypeHandler();
-    closure.setDelegate(structTypeHandler);
-    closure.setResolveStrategy(Closure.DELEGATE_ONLY);
-    closure.call();
-
-    columns.add(
-        new Column(
-            name,
-            new StructColumnType(new ArrayList<>(structTypeHandler.getColumns())),
-            isOptional,
-            doc));
-  }
+  // === Inner class for map key/value handling ===
 
   @Getter
   public static class MapTypeHandler implements WithColumnTypesUtilities {

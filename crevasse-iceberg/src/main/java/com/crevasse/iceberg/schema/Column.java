@@ -25,117 +25,149 @@ public class Column {
     return !isOptional;
   }
 
+  /**
+   * Generate the DSL code for this column using the fluent builder pattern.
+   *
+   * @return the DSL code string
+   */
   public String code() {
+    StringBuilder sb = new StringBuilder();
+
+    // Generate the column method call
     switch (columnType.getTypeId()) {
-      case BOOLEAN:
-        if (this.doc == null) return String.format("boolCol('%s', %s)", name, isOptional);
-        else return String.format("boolCol('%s', %s, '%s')", name, isOptional, doc);
+      case STRING:
+        sb.append(String.format("stringCol('%s')", name));
+        break;
       case INTEGER:
-        if (this.doc == null) return String.format("intCol('%s', %s)", name, isOptional);
-        else return String.format("intCol('%s', %s, '%s')", name, isOptional, doc);
+        sb.append(String.format("intCol('%s')", name));
+        break;
       case LONG:
-        if (this.doc == null) return String.format("longCol('%s', %s)", name, isOptional);
-        else return String.format("longCol('%s', %s, '%s')", name, isOptional, doc);
+        sb.append(String.format("longCol('%s')", name));
+        break;
       case FLOAT:
-        if (this.doc == null) return String.format("floatCol('%s', %s)", name, isOptional);
-        else return String.format("floatCol('%s', %s, '%s')", name, isOptional, doc);
+        sb.append(String.format("floatCol('%s')", name));
+        break;
       case DOUBLE:
-        if (this.doc == null) return String.format("doubleCol('%s', %s)", name, isOptional);
-        else return String.format("doubleCol('%s', %s, '%s')", name, isOptional, doc);
-      case DECIMAL:
-        if (this.doc == null)
-          return String.format(
-              "decimalCol('%s', %s, %s, %s)",
-              name,
-              isOptional,
-              ((Types.DecimalType) getType()).precision(),
-              ((Types.DecimalType) getType()).scale());
-        else
-          return String.format(
-              "decimalCol('%s', %s, %s, %s, '%s')",
-              name,
-              isOptional,
-              ((Types.DecimalType) getType()).precision(),
-              ((Types.DecimalType) getType()).scale(),
-              doc);
+        sb.append(String.format("doubleCol('%s')", name));
+        break;
+      case BOOLEAN:
+        sb.append(String.format("boolCol('%s')", name));
+        break;
       case DATE:
-        if (this.doc == null) return String.format("dateCol('%s', %s)", name, isOptional);
-        else return String.format("dateCol('%s', %s, '%s')", name, isOptional, doc);
+        sb.append(String.format("dateCol('%s')", name));
+        break;
       case TIME:
-        if (this.doc == null) return String.format("timeCol('%s', %s)", name, isOptional);
-        else return String.format("timeCol('%s', %s, '%s')", name, isOptional, doc);
+        sb.append(String.format("timeCol('%s')", name));
+        break;
       case TIMESTAMP:
         if (((Types.TimestampType) getType()).shouldAdjustToUTC()) {
-          if (this.doc == null)
-            return String.format("timestampWithZoneCol('%s', %s)", name, isOptional);
-          else return String.format("timestampWithZoneCol('%s', %s, '%s')", name, isOptional, doc);
+          sb.append(String.format("timestampWithZoneCol('%s')", name));
         } else {
-          if (this.doc == null) return String.format("timestampCol('%s', %s)", name, isOptional);
-          else return String.format("timestampCol('%s', %s, '%s')", name, isOptional, doc);
+          sb.append(String.format("timestampCol('%s')", name));
         }
-      case STRING:
-        if (this.doc == null) return String.format("stringCol('%s', %s)", name, isOptional);
-        else return String.format("stringCol('%s', %s, '%s')", name, isOptional, doc);
+        break;
       case UUID:
-        if (this.doc == null) return String.format("uuidCol('%s', %s)", name, isOptional);
-        else return String.format("uuidCol('%s', %s, '%s')", name, isOptional, doc);
-      case FIXED:
-        if (this.doc == null)
-          return String.format(
-              "fixedCol('%s', %s, %s)", name, isOptional, ((Types.FixedType) getType()).length());
-        else
-          return String.format(
-              "fixedCol('%s', %s, %s, '%s')",
-              name, isOptional, ((Types.FixedType) getType()).length(), doc);
+        sb.append(String.format("uuidCol('%s')", name));
+        break;
       case BINARY:
-        if (this.doc == null) return String.format("binaryCol('%s', %s)", name, isOptional);
-        else return String.format("binaryCol('%s', %s, '%s')", name, isOptional, doc);
-
-      case MAP:
-        if (this.doc == null)
-          return String.format(
-              "mapCol('%s', %s) {\n\t" + "key %s\n\t\t" + "value %s\n\t\t" + "\n\t}",
-              name,
-              isOptional,
-              ((MapColumnType) columnType).getKeyType().code(),
-              ((MapColumnType) columnType).getValueType().code());
-        else
-          return String.format(
-              "mapCol('%s', %s, '%s') {\n\t" + "key %s\n\t\t" + "value %s\n\t\t" + "\n\t}",
-              name,
-              isOptional,
-              doc,
-              ((MapColumnType) columnType).getKeyType().code(),
-              ((MapColumnType) columnType).getValueType().code());
+        sb.append(String.format("binaryCol('%s')", name));
+        break;
+      case DECIMAL:
+        sb.append(
+            String.format(
+                "decimalCol('%s', %d, %d)",
+                name,
+                ((Types.DecimalType) getType()).precision(),
+                ((Types.DecimalType) getType()).scale()));
+        break;
+      case FIXED:
+        sb.append(
+            String.format(
+                "fixedCol('%s', %d)", name, ((Types.FixedType) getType()).length()));
+        break;
       case LIST:
-        if (this.doc == null)
-          return String.format(
-              "listCol('%s', %s, %s)",
-              name, isOptional, ((ListColumnType) columnType).getElementType().code());
-        else
-          return String.format(
-              "listCol('%s', %s,  '%s', %s)",
-              name, isOptional, doc, ((ListColumnType) columnType).getElementType().code());
-
+        sb.append(
+            String.format(
+                "listCol('%s', %s)",
+                name, ((ListColumnType) columnType).getElementType().code()));
+        break;
+      case MAP:
+        sb.append(String.format("mapCol('%s')", name));
+        break;
       case STRUCT:
-        if (this.doc == null)
-          return String.format(
-              "structCol('%s', %s) {\n\t" + "%s\n\t}",
-              name,
-              isOptional,
-              ((StructColumnType) columnType)
-                  .getColumns().stream().map(Column::code).collect(Collectors.joining("\n\t\t")));
-        else
-          return String.format(
-              "structCol('%s', %s, '%s') {\n\t" + "%s\n\t}",
-              name,
-              isOptional,
-              doc,
-              ((StructColumnType) columnType)
-                  .getColumns().stream().map(Column::code).collect(Collectors.joining("\n\t\t")));
+        sb.append(String.format("structCol('%s')", name));
+        break;
       default:
         throw new IllegalArgumentException("Unsupported type: " + columnType.getTypeId());
     }
+
+    // Handle struct and map types with closures
+    if (columnType.getTypeId() == Type.TypeID.STRUCT) {
+      appendStructNullabilityAndContent(sb);
+    } else if (columnType.getTypeId() == Type.TypeID.MAP) {
+      appendMapNullabilityAndContent(sb);
+    } else {
+      // For primitive and list types, add fluent methods
+      appendNullabilityAndDoc(sb);
+    }
+
+    return sb.toString();
+  }
+
+  private void appendNullabilityAndDoc(StringBuilder sb) {
+    // Only add .notNullable() when required (nullable is the default)
+    if (!isOptional) {
+      sb.append(".notNullable()");
+    }
+    // Add .doc() if present
+    if (doc != null) {
+      sb.append(String.format(".doc('%s')", escapeString(doc)));
+    }
+  }
+
+  private void appendStructNullabilityAndContent(StringBuilder sb) {
+    StructColumnType structType = (StructColumnType) columnType;
+    String nestedContent =
+        structType.getColumns().stream()
+            .map(Column::code)
+            .collect(Collectors.joining("\n\t\t"));
+
+    // Use nullability method with closure
+    if (!isOptional) {
+      sb.append(".notNullable {\n\t\t");
+    } else {
+      sb.append(".nullable {\n\t\t");
+    }
+    sb.append(nestedContent);
+    sb.append("\n\t}");
+
+    // Add .doc() if present (after the closure)
+    if (doc != null) {
+      sb.append(String.format(".doc('%s')", escapeString(doc)));
+    }
+  }
+
+  private void appendMapNullabilityAndContent(StringBuilder sb) {
+    MapColumnType mapType = (MapColumnType) columnType;
+
+    // Use nullability method with closure
+    if (!isOptional) {
+      sb.append(".notNullable {\n\t\t");
+    } else {
+      sb.append(".nullable {\n\t\t");
+    }
+    sb.append(String.format("key(%s)\n\t\t", mapType.getKeyType().code()));
+    sb.append(String.format("value(%s)", mapType.getValueType().code()));
+    sb.append("\n\t}");
+
+    // Add .doc() if present (after the closure)
+    if (doc != null) {
+      sb.append(String.format(".doc('%s')", escapeString(doc)));
+    }
+  }
+
+  private String escapeString(String s) {
+    return s.replace("\\", "\\\\").replace("'", "\\'");
   }
 
   public Type getType() {

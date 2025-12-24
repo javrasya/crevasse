@@ -214,10 +214,10 @@ migrate {
     """
 
     addColumns {
-        stringCol('id', false)
-        stringCol('username', false)
-        stringCol('email', true)
-        longCol('created_at', false)
+        stringCol('id').notNullable()
+        stringCol('username').notNullable()
+        stringCol('email')
+        longCol('created_at').notNullable()
     }
 }
 ```
@@ -280,7 +280,7 @@ protocol Events {
 | `record` | `structCol()` | Nested structure |
 | `array<T>` | `listCol()` | List/array |
 | `map<T>` | `mapCol()` | Key-value map |
-| `T?` (union with null) | `*Col(name, true)` | Optional column |
+| `T?` (union with null) | `*Col(name)` or `*Col(name).nullable()` | Optional column (default) |
 
 ---
 
@@ -355,7 +355,7 @@ migrate {
         * Add column 'email'
     """
     addColumns {
-        stringCol('email', true)
+        stringCol('email')
     }
 }
 ```
@@ -423,30 +423,30 @@ migrate {
 ```groovy
 addColumns {
     // String types
-    stringCol('name', false)                    // Required string
-    stringCol('nickname', true)                 // Optional string
-    stringCol('bio', true, 'User biography')    // With documentation
+    stringCol('name').notNullable()              // Required string
+    stringCol('nickname')                        // Optional string (default)
+    stringCol('bio').doc('User biography')       // With documentation
 
     // Numeric types
-    intCol('age', true)                         // 32-bit integer
-    longCol('timestamp', false)                 // 64-bit integer
-    floatCol('score', true)                     // 32-bit float
-    doubleCol('amount', false)                  // 64-bit double
-    decimalCol('price', false, 10, 2)           // Decimal(precision, scale)
+    intCol('age')                                // 32-bit integer (optional)
+    longCol('timestamp').notNullable()           // 64-bit integer (required)
+    floatCol('score')                            // 32-bit float
+    doubleCol('amount').notNullable()            // 64-bit double
+    decimalCol('price', 10, 2).notNullable()     // Decimal(precision, scale)
 
     // Boolean
-    boolCol('is_active', false)
+    boolCol('is_active').notNullable()
 
     // Date/Time types
-    dateCol('birth_date', true)                 // Date without time
-    timeCol('start_time', true)                 // Time without date
-    timestampCol('created_at', false)           // Timestamp without timezone
-    timestampWithZoneCol('updated_at', true)    // Timestamp with UTC timezone
+    dateCol('birth_date')                        // Date without time
+    timeCol('start_time')                        // Time without date
+    timestampCol('created_at').notNullable()     // Timestamp without timezone
+    timestampWithZoneCol('updated_at')           // Timestamp with UTC timezone
 
     // Binary types
-    binaryCol('avatar', true)                   // Variable-length binary
-    fixedCol('checksum', false, 32)             // Fixed-length binary (32 bytes)
-    uuidCol('correlation_id', true)             // UUID
+    binaryCol('avatar')                          // Variable-length binary
+    fixedCol('checksum', 32).notNullable()       // Fixed-length binary (32 bytes)
+    uuidCol('correlation_id')                    // UUID
 }
 ```
 
@@ -455,43 +455,43 @@ addColumns {
 ```groovy
 addColumns {
     // Struct (nested record)
-    structCol('address', true) {
-        stringCol('street', false)
-        stringCol('city', false)
-        stringCol('country', false)
-        stringCol('postal_code', true)
+    structCol('address').nullable {
+        stringCol('street').notNullable()
+        stringCol('city').notNullable()
+        stringCol('country').notNullable()
+        stringCol('postal_code')
     }
 
     // List/Array
-    listCol('tags', true, stringType())
-    listCol('scores', false, intType())
+    listCol('tags', stringType())
+    listCol('scores', intType()).notNullable()
 
     // List of structs
-    listCol('addresses', true, structType {
-        stringCol('street', false)
-        stringCol('city', false)
+    listCol('addresses', structType {
+        stringCol('street').notNullable()
+        stringCol('city').notNullable()
     })
 
     // Map
-    mapCol('metadata', true) {
+    mapCol('metadata').nullable {
         key(stringType())
         value(stringType())
     }
 
     // Map with struct values
-    mapCol('settings', true) {
+    mapCol('settings').nullable {
         key(stringType())
         value(structType {
-            stringCol('value', false)
-            boolCol('encrypted', false)
+            stringCol('value').notNullable()
+            boolCol('encrypted').notNullable()
         })
     }
 
     // Deeply nested structures
-    structCol('profile', true) {
-        stringCol('bio', true)
-        listCol('interests', true, stringType())
-        mapCol('social_links', true) {
+    structCol('profile').nullable {
+        stringCol('bio')
+        listCol('interests', stringType())
+        mapCol('social_links').nullable {
             key(stringType())
             value(stringType())
         }
@@ -508,7 +508,7 @@ migrate {
 
     // Add new columns
     addColumns {
-        stringCol('new_field', true)
+        stringCol('new_field')
     }
 
     // Remove columns
@@ -529,8 +529,8 @@ migrate {
 
     // Add fields to existing struct
     addColumnsToParent("address") {
-        stringCol('apartment', true)
-        stringCol('floor', true)
+        stringCol('apartment')
+        stringCol('floor')
     }
 }
 ```
@@ -601,11 +601,11 @@ migrate {
     """
 
     addColumns {
-        stringCol('user_id', false)
-        stringCol('username', false)
-        stringCol('email', true)
-        timestampCol('created_at', false)
-        boolCol('is_verified', false)
+        stringCol('user_id').notNullable()
+        stringCol('username').notNullable()
+        stringCol('email')
+        timestampCol('created_at').notNullable()
+        boolCol('is_verified').notNullable()
     }
 }
 ```
@@ -620,16 +620,16 @@ migrate {
     """
 
     addColumns {
-        structCol('profile', true) {
-            stringCol('display_name', true)
-            stringCol('bio', true)
-            stringCol('avatar_url', true)
+        structCol('profile').nullable {
+            stringCol('display_name')
+            stringCol('bio')
+            stringCol('avatar_url')
 
-            structCol('preferences', true) {
-                boolCol('email_notifications', true)
-                boolCol('dark_mode', true)
-                stringCol('language', true)
-                stringCol('timezone', true)
+            structCol('preferences').nullable {
+                boolCol('email_notifications')
+                boolCol('dark_mode')
+                stringCol('language')
+                stringCol('timezone')
             }
         }
     }
@@ -647,17 +647,17 @@ migrate {
 
     addColumns {
         // Simple list
-        listCol('tags', true, stringType())
+        listCol('tags', stringType())
 
         // List of complex objects
-        listCol('login_history', true, structType {
-            timestampWithZoneCol('timestamp', false)
-            stringCol('ip_address', false)
-            stringCol('user_agent', true)
+        listCol('login_history', structType {
+            timestampWithZoneCol('timestamp').notNullable()
+            stringCol('ip_address').notNullable()
+            stringCol('user_agent')
         })
 
         // Key-value metadata
-        mapCol('custom_attributes', true) {
+        mapCol('custom_attributes').nullable {
             key(stringType())
             value(stringType())
         }
@@ -682,8 +682,8 @@ migrate {
 
     // Add replacement columns
     addColumns {
-        stringCol('status', false)
-        intCol('status_code', false)
+        stringCol('status').notNullable()
+        intCol('status_code').notNullable()
     }
 
     // Widen numeric types
@@ -729,37 +729,37 @@ migrate {
     """
 
     addColumns {
-        stringCol('order_id', false)
-        stringCol('customer_id', false)
+        stringCol('order_id').notNullable()
+        stringCol('customer_id').notNullable()
 
-        structCol('shipping_address', false) {
-            stringCol('name', false)
-            stringCol('street', false)
-            stringCol('city', false)
-            stringCol('state', true)
-            stringCol('postal_code', false)
-            stringCol('country', false)
+        structCol('shipping_address').notNullable {
+            stringCol('name').notNullable()
+            stringCol('street').notNullable()
+            stringCol('city').notNullable()
+            stringCol('state')
+            stringCol('postal_code').notNullable()
+            stringCol('country').notNullable()
         }
 
-        listCol('line_items', false, structType {
-            stringCol('product_id', false)
-            stringCol('product_name', false)
-            intCol('quantity', false)
-            decimalCol('unit_price', false, 10, 2)
-            decimalCol('total_price', false, 10, 2)
-            mapCol('attributes', true) {
+        listCol('line_items', structType {
+            stringCol('product_id').notNullable()
+            stringCol('product_name').notNullable()
+            intCol('quantity').notNullable()
+            decimalCol('unit_price', 10, 2).notNullable()
+            decimalCol('total_price', 10, 2).notNullable()
+            mapCol('attributes').nullable {
                 key(stringType())
                 value(stringType())
             }
-        })
+        }).notNullable()
 
-        decimalCol('subtotal', false, 12, 2)
-        decimalCol('tax', false, 12, 2)
-        decimalCol('total', false, 12, 2)
+        decimalCol('subtotal', 12, 2).notNullable()
+        decimalCol('tax', 12, 2).notNullable()
+        decimalCol('total', 12, 2).notNullable()
 
-        stringCol('status', false)
-        timestampWithZoneCol('ordered_at', false)
-        timestampWithZoneCol('shipped_at', true)
+        stringCol('status').notNullable()
+        timestampWithZoneCol('ordered_at').notNullable()
+        timestampWithZoneCol('shipped_at')
     }
 
     addPartitionColumns {
@@ -891,8 +891,8 @@ migrate {
     description "Add user preferences"
 
     addColumns {
-        stringCol('timezone', true)
-        stringCol('language', true)
+        stringCol('timezone')
+        stringCol('language')
     }
 }
 
@@ -905,8 +905,8 @@ migrate {
     """
 
     addColumns {
-        stringCol('timezone', true)
-        stringCol('language', true)
+        stringCol('timezone')
+        stringCol('language')
     }
 
     // Manually added
