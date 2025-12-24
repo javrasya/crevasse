@@ -1,7 +1,7 @@
 ![crevasse-logo.png](asssets/crevasse-logo.png)
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![JitPack](https://jitpack.io/v/javrasya/crevasse.svg)](https://jitpack.io/#javrasya/crevasse)
+[![JitPack](https://img.shields.io/jitpack/version/com.github.javrasya/crevasse?label=JitPack)](https://jitpack.io/#javrasya/crevasse)
 [![Java](https://img.shields.io/badge/Java-11%2B-orange.svg)](https://openjdk.org/)
 [![Gradle](https://img.shields.io/badge/Gradle-9.x-green.svg)](https://gradle.org/)
 [![Iceberg](https://img.shields.io/badge/Apache%20Iceberg-1.5.x-blueviolet.svg)](https://iceberg.apache.org/)
