@@ -305,6 +305,31 @@ cd crevasse
 
 Then use `mavenLocal()` in your repositories and version `1.0-SNAPSHOT`.
 
+### Try the Example Project
+
+The repository includes a working example you can run immediately:
+
+```bash
+# Clone the repository
+git clone https://github.com/javrasya/crevasse.git
+cd crevasse/examples/crevasse-iceberg-example
+
+# Configure Gradle daemon to use Java 21 (required for Java 23+ users)
+./gradlew updateDaemonJvm --jvm-version=21
+
+# Generate migration scripts from Avro schema
+./gradlew generateMigrationScripts
+
+# Apply migrations to create the Iceberg table
+./gradlew applyMigrations
+```
+
+The example project demonstrates:
+- JitPack-based plugin resolution (no local build required)
+- Avro schema definition (`src/main/avro/`)
+- Generated migration scripts (`migrations/`)
+- Hadoop catalog configuration for local development
+
 ---
 
 ## Quick Start
