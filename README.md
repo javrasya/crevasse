@@ -25,19 +25,6 @@ Crevasse is a **table-format agnostic** schema migration framework for modern la
 
 ---
 
-## Why Crevasse?
-
-| Feature | Crevasse | Raw SQL | YAML/JSON Config | Custom Scripts |
-|---------|:--------:|:-------:|:----------------:|:--------------:|
-| **IDE Autocomplete** | ✅ Full | ⚠️ Partial | ❌ None | ❌ None |
-| **Type Safety** | ✅ Full | ❌ None | ❌ None | ⚠️ Varies |
-| **Schema Drift Detection** | ✅ Auto | ❌ Manual | ❌ Manual | ❌ Manual |
-| **Table Format Agnostic** | ✅ Yes | ❌ No | ⚠️ Varies | ❌ No |
-| **Versioned History** | ✅ Built-in | ❌ Manual | ❌ Manual | ❌ Manual |
-| **Refactoring Support** | ✅ Full | ❌ None | ❌ None | ❌ None |
-
----
-
 ## Get Started in 60 Seconds
 
 **1. Add JitPack repository and plugin to `settings.gradle`:**
@@ -62,7 +49,7 @@ pluginManagement {
 
 ```groovy
 plugins {
-    id 'com.crevasse.plugin' version 'v0.1.1'
+    id 'com.crevasse.plugin' version 'v0.1.2'
 }
 ```
 
@@ -75,13 +62,12 @@ plugins {
 
 **That's it!** Your Iceberg table is created with the schema from your Avro definition.
 
-> **Tip:** Use a specific version tag (e.g., `v0.1.1`) for reproducible builds.
+> **Tip:** Use a specific version tag (e.g., `v0.1.2`) for reproducible builds.
 
 ---
 
 ## Table of Contents
 
-- [Why Crevasse?](#why-crevasse)
 - [Get Started in 60 Seconds](#get-started-in-60-seconds)
 - [Architecture](#architecture)
 - [Supported Table Formats](#supported-table-formats)
@@ -275,7 +261,7 @@ pluginManagement {
 plugins {
     id 'java'
     id 'com.github.davidmc24.gradle.plugin.avro' version '1.9.1'
-    id 'com.crevasse.plugin' version 'v0.1.1'
+    id 'com.crevasse.plugin' version 'v0.1.2'
 }
 
 repositories {
@@ -289,7 +275,7 @@ dependencies {
 ```
 
 > **Version options:**
-> - `v0.1.1` - Specific release version (recommended)
+> - `v0.1.2` - Specific release version (recommended)
 > - `main-SNAPSHOT` - Latest from main branch (bleeding edge)
 > - `<commit-hash>` - Specific commit (e.g., `525697c`)
 

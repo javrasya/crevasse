@@ -42,21 +42,24 @@ public class MigrationExecutor {
     this.additionalMigrationScriptContainers = additionalMigrationScriptContainers;
   }
 
-  public void run() throws IOException {
+  public MigrationExecutionResult run() throws IOException {
+    final String database = tableIdentifier.namespace().toString();
+    final String table = tableIdentifier.name();
+
     List<MigrationScriptContainer> migrationScriptContainers =
         new ArrayList<>(scanExistingMigrationScripts(scriptDir.toString(), tableIdentifier));
     migrationScriptContainers.addAll(additionalMigrationScriptContainers);
 
     if (migrationScriptContainers.isEmpty()) {
-      System.out.println("No migration scripts found to apply");
-      return;
+      return MigrationExecutionResult.noScripts(database, table);
     }
 
     final Catalog catalog = catalogSupplier.get();
     AtomicInteger latestAppliedMitigationId = new AtomicInteger(-1);
     if (catalog.tableExists(tableIdentifier)) {
-      final Table table = catalog.loadTable(tableIdentifier);
-      latestAppliedMitigationId.set(Integer.parseInt(table.properties().get(METADATA_STATE_KEY)));
+      final Table icebergTable = catalog.loadTable(tableIdentifier);
+      latestAppliedMitigationId.set(
+          Integer.parseInt(icebergTable.properties().get(METADATA_STATE_KEY)));
     }
 
     final List<MigrationStep> migrationSteps = new ArrayList<>();
@@ -69,51 +72,59 @@ public class MigrationExecutor {
     final List<MigrationStep> unappliedMitigationSteps =
         migrationSteps.stream()
             .filter(step -> step.getOrder() > latestAppliedMitigationId.get())
+            .sorted(Comparator.comparing(MigrationStep::getOrder))
             .collect(Collectors.toList());
 
-    final int maxOrderSoFar =
+    if (unappliedMitigationSteps.isEmpty()) {
+      return MigrationExecutionResult.noPending(database, table);
+    }
+
+    final int minOrder =
+        unappliedMitigationSteps.stream()
+            .map(MigrationStep::getOrder)
+            .min(Comparator.naturalOrder())
+            .orElse(-1);
+
+    final int maxOrder =
         unappliedMitigationSteps.stream()
             .map(MigrationStep::getOrder)
             .max(Comparator.naturalOrder())
             .orElse(-1);
 
-    if (dryRun) {
-      System.out.println("Dry run mode enabled. No migration will be applied");
+    final List<String> descriptions =
+        unappliedMitigationSteps.stream()
+            .map(step -> step.getDescription() != null ? step.getDescription().trim() : null)
+            .collect(Collectors.toList());
 
+    if (dryRun) {
       final MigrationContext migrationContextWithFakeTable =
           MigrationHelpers.getContextWithFakeTable();
 
       for (MigrationStep migrationStep : unappliedMitigationSteps) {
-        System.out.printf(
-            "Applying migration in dryRun mode with description of '%s'%n",
-            migrationStep.getDescription());
         migrationContextWithFakeTable.addStep(migrationStep);
       }
 
       migrationContextWithFakeTable.applyChanges();
+      return MigrationExecutionResult.dryRun(
+          database, table, unappliedMitigationSteps.size(), minOrder, maxOrder, descriptions);
     } else {
       final MigrationContext migrationContext = new MigrationContext(catalog, tableIdentifier);
 
       for (MigrationStep migrationStep : unappliedMitigationSteps) {
-        System.out.printf(
-            "Registering migration with description of '%s'%n", migrationStep.getDescription());
         migrationContext.addStep(migrationStep);
       }
 
-      if (migrationContext.hasAnyStep()) {
-        migrationContext.applyChanges();
+      migrationContext.applyChanges();
 
-        final Table table = catalog.loadTable(tableIdentifier);
-        table
-            .updateProperties()
-            .set(METADATA_STATE_KEY, String.valueOf(maxOrderSoFar))
-            .set(METADATA_LAST_UPDATED_AT_KEY, Instant.now().toString())
-            .commit();
-        System.out.printf(
-            "Migration with %d steps has been applied%n", unappliedMitigationSteps.size());
-      } else {
-        System.out.println("No migration found to apply");
-      }
+      final Table icebergTable = catalog.loadTable(tableIdentifier);
+      icebergTable
+          .updateProperties()
+          .set(METADATA_STATE_KEY, String.valueOf(maxOrder))
+          .set(METADATA_LAST_UPDATED_AT_KEY, Instant.now().toString())
+          .commit();
+
+      return MigrationExecutionResult.applied(
+          database, table, unappliedMitigationSteps.size(), minOrder, maxOrder, descriptions);
     }
   }
 }
