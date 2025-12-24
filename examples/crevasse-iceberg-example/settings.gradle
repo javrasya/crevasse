@@ -1,7 +1,14 @@
 pluginManagement {
     repositories {
-        mavenLocal()
+        maven { url 'https://jitpack.io' }
         gradlePluginPortal()
+    }
+    resolutionStrategy {
+        eachPlugin {
+            if (requested.id.id == 'com.crevasse.plugin') {
+                useModule("com.github.javrasya.crevasse:crevasse-plugin:${requested.version}")
+            }
+        }
     }
 }
 rootProject.name = 'crevasse-iceberg-example'
