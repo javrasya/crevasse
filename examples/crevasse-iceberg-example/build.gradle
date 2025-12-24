@@ -10,6 +10,14 @@ repositories {
     mavenCentral()
 }
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
 apply plugin: "com.github.davidmc24.gradle.plugin.avro"
 
 sourceSets.main.java.srcDir new File(buildDir, 'generated-main-avro-java')
